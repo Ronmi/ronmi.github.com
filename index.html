@@ -1,259 +1,90 @@
-<!DOCTYPE html>
+	<!DOCTYPE html>
+<html lang="zh-tw">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="Ronmi Ren">
+		<meta name="description" content="簡單記錄">
+		<meta name="generator" content="Hugo 0.15-DEV" />
+		<title>程式、雜談 &middot; 程式、雜談</title>
+		<link rel="shortcut icon" href="https://ronmi.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ronmi.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ronmi.github.io/css/highlight.css">
+		<link href="https://ronmi.github.io/index.xml" rel="alternate" type="application/rss+xml" title="程式、雜談" />
+	</head>
+	<body>
+    <nav class="main-nav">
+	
+	
 
-<meta charset="utf-8">
+	
+		<a href='https://ronmi.github.io/about'>About</a>
+	
 
+	
+	<a class="cta" href="https://ronmi.github.io/index.xml">Subscribe</a>
+	
+</nav>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <div class="profile">
+    <section id="wrapper">
+        <header id="header">
+            <a href='https://ronmi.github.io/about'>
+                <img id="avatar" class="2x" src="https://ronmi.github.io/images/avatar.png"/>
+            </a>
+            <h1>Ronmi Ren</h1>
+            <h2>Programmer</h2>
+        </header>
+    </section>
+</div>
 
-<meta property="og:url" content="https://ronmi.github.io">
-
-
-<meta property="og:type" content="website">
-
-<meta property="og:title" content="程式、雜談">
-
-
-<meta property="og:site_name" content="程式、雜談">
-
-<title>
+    <section id="wrapper" class="home">
+        <ul id="post-list">
     
-    程式、雜談
     
-</title>
-
-
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
-<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
-<link rel="stylesheet" href="//yandex.st/highlightjs/8.0/styles/">
-<link rel="stylesheet" href="https://ronmi.github.io/css/styles.css">
-<link rel="stylesheet" href="https://ronmi.github.io/css/custom.css">
-
-
-<link rel="shortcut icon" href="https://ronmi.github.io/assets/favicon.ico">
-
-
-<link rel="alternate" type="application/rss+xml" title="RSS" href="https://ronmi.github.io/index.xml">
-
-
-<div class="container">
-    <header class="nav">
-        <nav class="navbar navbar-default">
-            <div class="container-fluid">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href="https://ronmi.github.io">程式、雜談</a>
-                </div>
-
-                <div class="collapse navbar-collapse" id="navbar-collapse">
-                    <ul class="nav navbar-nav">
-                        <li><a href="https://ronmi.github.io/post">All Posts</a></li>
-                        <li><a href="https://ronmi.github.io/tags">Tags</a></li>
-                        
-                    </ul>
-
-                    <ul class="nav navbar-nav navbar-right">
-                        
-                        <li>
-                            <a href="https://www.facebook.com/ronmi.ren" target="_blank">
-                                <i class="fa fa-facebook-square"></i>
-                                Facebook</a>
-                        </li>
-                        
-                        
-                        <li>
-                            <a href="https://twitter.com/redmonam" target="_blank">
-                                <i class="fa fa-twitter-square"></i>
-                                Twitter</a>
-                        </li>
-                        
-                        
-                        <li>
-                            <a href="https://github.com/Ronmi" target="_blank">
-                                <i class="fa fa-github-square"></i>
-                                GitHub
-                            </a>
-                        </li>
-                        
-                        
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-
-
-<div class="row">
-    <div class="col-md-8">
-        <div class="posts">
-            
-            
-<article class="post">
-    <header>
-        <div class="post-date">
-            <span class="glyphicon glyphicon-calendar"></span>
-            <time datetime="Wed, Sep 16, 2015">
-                Wed, Sep 16, 2015
-            </time>
-        </div>
-        <h1 class="post-title">
-            <a href="https://ronmi.github.io/post/go/effectivego/">有效地去 - Effective go 正體中文翻譯</a>
-        </h1>
-    </header>
-    <div class="post-content">
-        <h2 id="簡介:59460734ae8bfafc35f54a1a1aefb011">簡介</h2>
-
-<p>Go 是一門新的程式語言。雖然它從現有的程式語言中借鏡了許多設計理念，但它也有許多與眾不同的特性。若你把用 C++ / Java 撰寫的程式改寫成等價的 Go 程式，恐怕難以得到令人滿意的結果。同樣地，用 Go 語言的角度來解決問題，你可能會寫出有效但不太一樣的程式。換句話說，想要寫出好的 Go 程式，對於 Go 語言特性及慣例的掌握是重要的一環。同時，對於社群慣例 (比如排版、命名方式、程式的建立等等) 也應該要適當的了解，這樣其他使用 Go 語言的開發者才容易理解你寫的程式。</p>
-
-<p>這份文件列舉出一些訣竅，讓你寫出清楚、符合 Go 語言特性的程式。這是對於 <a href="https://golang.org/ref/spec">Go 語言規格書</a>、<a href="https://tour.golang.org/">導覽 Go 語言</a> 以及 <a href="https://golang.org/doc/code.html">如何撰寫 Go 程式</a> 等三份文件的補充，所以你應該先讀過這三份文件。</p>
-
-    </div>
-    <footer class="readon">
-        <a href="https://ronmi.github.io/post/go/effectivego/" class="btn btn-default">
-            READ ON
-        </a>
-    </footer>
-</article>
-<hr>
-
-            
-            
-<article class="post">
-    <header>
-        <div class="post-date">
-            <span class="glyphicon glyphicon-calendar"></span>
-            <time datetime="Wed, Sep 16, 2015">
-                Wed, Sep 16, 2015
-            </time>
-        </div>
-        <h1 class="post-title">
-            <a href="https://ronmi.github.io/post/go/defer-commit-rollback/">defer, Commit and Rollback</a>
-        </h1>
-    </header>
-    <div class="post-content">
-        <p>使用 transaction 的時候，利用 defer 函式的特性 commit 或 rollback 比較合於 Go 的慣例。理論上應該有兩種形式，第一種是利用 <code>Commit()</code> 之後 <code>Rollback()</code> 不會真正執行的特性：</p>
-
-    </div>
-    <footer class="readon">
-        <a href="https://ronmi.github.io/post/go/defer-commit-rollback/" class="btn btn-default">
-            READ ON
-        </a>
-    </footer>
-</article>
-<hr>
-
-            
-            
-<article class="post">
-    <header>
-        <div class="post-date">
-            <span class="glyphicon glyphicon-calendar"></span>
-            <time datetime="Wed, Sep 16, 2015">
-                Wed, Sep 16, 2015
-            </time>
-        </div>
-        <h1 class="post-title">
-            <a href="https://ronmi.github.io/post/go/test-http-handler/">為 function 加上方法來測試 http handler</a>
-        </h1>
-    </header>
-    <div class="post-content">
-        <p>在寫測試的時候，發現自己一直重複使用 <code>NewRequest</code> 跟 <code>NewRecorder</code>，所以想到可以在 function 上加上方法來協助處理這些問題。</p>
-
-    </div>
-    <footer class="readon">
-        <a href="https://ronmi.github.io/post/go/test-http-handler/" class="btn btn-default">
-            READ ON
-        </a>
-    </footer>
-</article>
-<hr>
-
-            
-            <nav>
-                <ul class="pager">
-                    <li><a href="https://ronmi.github.io/post">All Posts</a></li>
-                </ul>
-            </nav>
-
-        </div>
-    </div>
-    <div class="col-md-4">
         
-<aside>
-    <div class="row">
-
-        <div class="col-xs-12 col-sm-4 col-md-12">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h2 class="panel-title">Recent Posts</h2>
-                </div>
-                <div class="list-group">
-                    
-                    <a href="/post/go/effectivego/" class="list-group-item">有效地去 - Effective go 正體中文翻譯</a>
-                    
-                    <a href="/post/go/defer-commit-rollback/" class="list-group-item">defer, Commit and Rollback</a>
-                    
-                    <a href="/post/go/test-http-handler/" class="list-group-item">為 function 加上方法來測試 http handler</a>
-                    
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xs-12 col-sm-4 col-md-12">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h2 class="panel-title">Tags</h2>
-                </div>
-                <div class="list-group">
-                    
-                    
-                    
-                    <a href="https://ronmi.github.io/tags/go" class="list-group-item">
-                        <span class="badge">3</span>
-                        go
-                    </a>
-                    
-                </div>
-            </div>
-        </div>
-
-    </div>
-</aside>
-
-    </div>
-</div>
-
-</div>
-<hr>
-
-<footer class="container copy">
-    <p>&copy; 2015  程式、雜談 </p>
-	<p>Powered by <a href="http://gohugo.io" target="_blank">Hugo</a></p>
-	<p>Theme <a href="https://github.com/dim0627/hugo_theme_hugostrap" target="_blank">Hugostrap</a> designed by <a href="http://yet.unresolved.xyz" target="_blank">Daisuke Tsuji</a>, Inspired from <a href="https://github.com/kAworu/octostrap3" target="_blank">Octostrap3</a></p>
+    
+    
+        
+            <li>
+                <a href='https://ronmi.github.io/post/go/effectivego/'><aside class="dates">Sep 16</aside></a>
+                <a href='https://ronmi.github.io/post/go/effectivego/'>有效地去 - Effective go 正體中文翻譯 <h2></h2></a>
+            </li>
+        
+    
+    
+        
+            <li>
+                <a href='https://ronmi.github.io/post/go/defer-commit-rollback/'><aside class="dates">Sep 16</aside></a>
+                <a href='https://ronmi.github.io/post/go/defer-commit-rollback/'>defer, Commit and Rollback <h2></h2></a>
+            </li>
+        
+    
+    
+        
+            <li>
+                <a href='https://ronmi.github.io/post/go/test-http-handler/'><aside class="dates">Sep 16</aside></a>
+                <a href='https://ronmi.github.io/post/go/test-http-handler/'>為 function 加上方法來測試 http handler <h2></h2></a>
+            </li>
+        
+    
+</ul>
+        <nav id="post-nav">
+    
+</nav>
+        <footer id="footer">
+    <p class="small">
+        © Copyright 2015 Ronmi Ren
+    </p>
 </footer>
+    </section>
 
-<script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
-<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
-<script src="//yandex.st/highlightjs/8.0/highlight.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://ronmi.github.io/js/main.js"></script>
+<script src="https://ronmi.github.io/js/highlight.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
 
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-ga('create', '', 'auto');
-ga('send', 'pageview');
-
-</script>
-
-<script>
-document.write('<script src="//sharebutton.net/plugin/sharebutton.php?type=horizontal&u=' + encodeURIComponent(document.location.href) + '"></scr' + 'ipt>');
-</script>
-
+    </body>
+</html>
