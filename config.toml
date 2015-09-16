@@ -1,0 +1,13 @@
+baseurl = "https://ronmi.github.io/"
+languageCode = "zh-tw"
+title = "程式、雜談"
+theme = "material-design"
+
+[blackfriday]
+  extensions = ["hardLineBreak"]
+
+[params]
+  twitter = "redmonam"
+  facebook = "ronmi.ren"
+  gplus = "RonmiRen"
+  github = "Ronmi"
