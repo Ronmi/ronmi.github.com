@@ -3,7 +3,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no"/>
-  <title>程式、雜談</title>
+  <title>defer, Commit and Rollback</title>
   <link href="https://ronmi.github.io//css/materialize.min.css" type="text/css" rel="stylesheet" media="screen,projection"/>
   <link href="https://ronmi.github.io//css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/styles/default.min.css">
@@ -54,69 +54,126 @@
   </div>
 
 
+
 <div class="container">
   <div class="section">
 
+    <div class="row">
+      <div class="col s12">
+        <div class="card-panel">
+          <h4>defer, Commit and Rollback</h4>
+          <p>
+           
+          </p>
+          <p><p>使用 transaction 的時候，利用 defer 函式的特性 commit 或 rollback 比較合於 Go 的慣例。理論上應該有兩種形式，第一種是利用 <code>Commit()</code> 之後 <code>Rollback()</code> 不會真正執行的特性：</p>
 
-<div class="row">
+<pre><code class="language-go">tx, err = db.Begin()
+if err != nil {
+	return err
+}
+defer tx.Rollback()
 
-  
-  <div class="col m4 s12">
-    <div class="card-panel">
-      <h4><a href="https://ronmi.github.io/post/go/defer-commit-rollback/">defer, Commit and Rollback</a></h4>
-      <p>
-       
-      </p>
-      <p><p>使用 transaction 的時候，利用 defer 函式的特性 commit 或 rollback 比較合於 Go 的慣例。理論上應該有兩種形式，第一種是利用 <code>Commit()</code> 之後 <code>Rollback()</code> 不會真正執行的特性：</p>
+if _, err := tx.Exec(query); err != nil {
+	return err
+}
+
+tx.Commit()
+</code></pre>
+
+<p>另外一種則是用 <code>panic</code> 和 <code>recover</code> 來確認在 defer 執行時的狀態是出錯還是正常</p>
+
+<pre><code class="language-go">tx, err = db.Begin()
+if err != nil {
+	return
+}
+defer func() {
+	if e := recover(); e != nil {
+		tx.Rollback()
+		err = e
+	} else {
+		tx.Commit()
+	}
+}
+
+if _, err = tx.Exec(query); err != nil {
+	panic(&quot;Cannot execute sql query&quot;)
+}
+return
+</code></pre>
+
+<p>後者看起來比較潮，但實際測速的結果</p>
+
+<pre><code class="language-go">func BenchmarkDeferRollback(b *testing.B) {
+	fn := func(i int) {
+		tx, err := db.Begin()
+		if err != nil {
+			b.Fatalf(&quot;Cannot begin transaction: %s&quot;, err)
+		}
+		defer tx.Rollback()
+		q := tx.Stmt(newPadQuery)
+		q.Exec(u.ID, fmt.Sprintf(&quot;rollback%d&quot;, i), &quot;content&quot;)
+		tx.Commit()
+	}
+	b.ResetTimer()
+	for i := 0; i &lt; b.N; i++ {
+		fn(i)
+	}
+}
+
+func BenchmarkDeferIfElse(b *testing.B) {
+	fn := func(i int) {
+		tx, err := db.Begin()
+		if err != nil {
+			b.Fatalf(&quot;Cannot begin transaction: %s&quot;, err)
+		}
+		defer func () {
+			if err := recover(); err != nil {
+				tx.Rollback()
+			} else {
+				tx.Commit()
+			}
+		}()
+		q := tx.Stmt(newPadQuery)
+		q.Exec(u.ID, fmt.Sprintf(&quot;if-else%d&quot;, i), &quot;content&quot;)
+	}
+	b.ResetTimer()
+	for i := 0; i &lt; b.N; i++ {
+		fn(i)
+	}
+}
+</code></pre>
+
+<pre><code>BenchmarkDeferRollback-8          100000             17449 ns/op
+BenchmarkDeferIfElse-8            100000             17816 ns/op
+</code></pre>
+
+<p>我跑了大概十來次測試，都是直接 Rollback 比較快，雖然只有快幾 % 而已。猜測原因，可能是 panic 跟 recover 這兩個錯誤處理函式耗去了一些效能吧。</p>
 </p>
-      <p>
-      16 Sep 2015
-      
-        
-          <a href="https://ronmi.github.io//tags/go/">#go</a>
-        
-       
-      </p>
+          <p>16 Sep 2015
+            
+              
+                <a href="https://ronmi.github.io//tags/go/">#go</a>
+              
+            
+          </p>
+          
+        </div>
+      </div>
     </div>
-  </div>
 
-  
-  <div class="col m4 s12">
-    <div class="card-panel">
-      <h4><a href="https://ronmi.github.io/post/go/test-http-handler/">為 function 加上方法來測試 http handler</a></h4>
-      <p>
-       
-      </p>
-      <p><p>在寫測試的時候，發現自己一直重複使用 <code>NewRequest</code> 跟 <code>NewRecorder</code>，所以想到可以在 function 上加上方法來協助處理這些問題。</p>
-</p>
-      <p>
-      16 Sep 2015
+    <div class="row">
+      <div class="col s3 m1">
       
-        
-          <a href="https://ronmi.github.io//tags/go/">#go</a>
-        
-       
-      </p>
+        <a class="btn-floating btn-large disabled"><i class="mdi-navigation-arrow-back"></i></a>
+      
+      </div>
+      <div class="col s6 m10 center">&nbsp</div>
+      <div class="col s3 m1">
+      
+        <a class="btn-floating btn-large waves-effect waves-light" href="https://ronmi.github.io/post/go/test-http-handler/"><i class="mdi-navigation-arrow-forward"></i></a>
+      
+      </div>
     </div>
-  </div>
-
-</div>
-
-  
-<div class="row">
-  <div class="col s3 m1">
-  
-    <a class="btn-floating btn-large disabled"><i class="mdi-navigation-arrow-back"></i></a>
-  
-  </div>
-  <div class="col s6 m10 center">&nbsp</div>
-  <div class="col s3 m1">
-  
-    <a class="btn-floating btn-large disabled"><i class="mdi-navigation-arrow-forward"></i></a>
-  
-  </div>
-</div>
-
 
   </div>
 </div>
@@ -138,3 +195,4 @@
 
   </body>
 </html>
+

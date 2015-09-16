@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on 程式、雜談</title>
+    <link>https://ronmi.github.io/post/</link>
+    <description>Recent content in Posts on 程式、雜談</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-tw</language>
+    <lastBuildDate>Wed, 16 Sep 2015 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://ronmi.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>defer, Commit and Rollback</title>
+      <link>https://ronmi.github.io/post/go/defer-commit-rollback/</link>
+      <pubDate>Wed, 16 Sep 2015 00:00:00 +0000</pubDate>
+      
+      <guid>https://ronmi.github.io/post/go/defer-commit-rollback/</guid>
+      <description>&lt;p&gt;使用 transaction 的時候，利用 defer 函式的特性 commit 或 rollback 比較合於 Go 的慣例。理論上應該有兩種形式，第一種是利用 &lt;code&gt;Commit()&lt;/code&gt; 之後 &lt;code&gt;Rollback()&lt;/code&gt; 不會真正執行的特性：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;tx, err = db.Begin()
+if err != nil {
+	return err
+}
+defer tx.Rollback()
+
+if _, err := tx.Exec(query); err != nil {
+	return err
+}
+
+tx.Commit()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;另外一種則是用 &lt;code&gt;panic&lt;/code&gt; 和 &lt;code&gt;recover&lt;/code&gt; 來確認在 defer 執行時的狀態是出錯還是正常&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;tx, err = db.Begin()
+if err != nil {
+	return
+}
+defer func() {
+	if e := recover(); e != nil {
+		tx.Rollback()
+		err = e
+	} else {
+		tx.Commit()
+	}
+}
+
+if _, err = tx.Exec(query); err != nil {
+	panic(&amp;quot;Cannot execute sql query&amp;quot;)
+}
+return
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;後者看起來比較潮，但實際測速的結果&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;func BenchmarkDeferRollback(b *testing.B) {
+	fn := func(i int) {
+		tx, err := db.Begin()
+		if err != nil {
+			b.Fatalf(&amp;quot;Cannot begin transaction: %s&amp;quot;, err)
+		}
+		defer tx.Rollback()
+		q := tx.Stmt(newPadQuery)
+		q.Exec(u.ID, fmt.Sprintf(&amp;quot;rollback%d&amp;quot;, i), &amp;quot;content&amp;quot;)
+		tx.Commit()
+	}
+	b.ResetTimer()
+	for i := 0; i &amp;lt; b.N; i++ {
+		fn(i)
+	}
+}
+
+func BenchmarkDeferIfElse(b *testing.B) {
+	fn := func(i int) {
+		tx, err := db.Begin()
+		if err != nil {
+			b.Fatalf(&amp;quot;Cannot begin transaction: %s&amp;quot;, err)
+		}
+		defer func () {
+			if err := recover(); err != nil {
+				tx.Rollback()
+			} else {
+				tx.Commit()
+			}
+		}()
+		q := tx.Stmt(newPadQuery)
+		q.Exec(u.ID, fmt.Sprintf(&amp;quot;if-else%d&amp;quot;, i), &amp;quot;content&amp;quot;)
+	}
+	b.ResetTimer()
+	for i := 0; i &amp;lt; b.N; i++ {
+		fn(i)
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code&gt;BenchmarkDeferRollback-8          100000             17449 ns/op
+BenchmarkDeferIfElse-8            100000             17816 ns/op
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;我跑了大概十來次測試，都是直接 Rollback 比較快，雖然只有快幾 % 而已。猜測原因，可能是 panic 跟 recover 這兩個錯誤處理函式耗去了一些效能吧。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>為 function 加上方法來測試 http handler</title>
+      <link>https://ronmi.github.io/post/go/test-http-handler/</link>
+      <pubDate>Wed, 16 Sep 2015 00:00:00 +0000</pubDate>
+      
+      <guid>https://ronmi.github.io/post/go/test-http-handler/</guid>
+      <description>&lt;p&gt;在寫測試的時候，發現自己一直重複使用 &lt;code&gt;NewRequest&lt;/code&gt; 跟 &lt;code&gt;NewRecorder&lt;/code&gt;，所以想到可以在 function 上加上方法來協助處理這些問題。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;type Test func(http.ResponseWriter, *http.Request)
+
+func (f Test) Get(uri, cookie string) (rec *httptest.ResponseRecorder, err error) {
+	rec = httptest.NewRecorder()
+	req, err := http.NewRequest(&amp;quot;GET&amp;quot;, uri, nil)
+	if err != nil {
+		return
+	}
+	req.Header.Add(&amp;quot;Cookie&amp;quot;, cookie)
+	f(rec, req)
+	return
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;使用起來像這樣&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;func TestMyhandler(t *testing.T) {
+	resp, err := Test(myhandler).Get(&amp;quot;/api/action&amp;quot;, &amp;quot;&amp;quot;)
+	if err != nil {
+		t.Fatalf(&amp;quot;Failed to create request for /api/action: %s&amp;quot;, err)
+	}
+
+	if resp.Body.String() != &amp;quot;success&amp;quot; {
+		t.Errorf(&amp;quot;Request to /api/action failed: %s&amp;quot;, resp.Body.String())
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
