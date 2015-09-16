@@ -1,21 +1,22 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Go on 程式、雜談</title>
+    <title>程式、雜談 </title>
     <link>https://ronmi.github.io/tags/go/</link>
-    <description>Recent content in Go on 程式、雜談</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>zh-tw</language>
-    <lastBuildDate>Wed, 16 Sep 2015 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://ronmi.github.io/tags/go/index.xml" rel="self" type="application/rss+xml" />
+    <language>en-us</language>
+    <author></author>
+    <rights>(C) 2015</rights>
+    <updated>2015-09-16 00:00:00 &#43;0000 UTC</updated>
+
     
-    <item>
-      <title>defer, Commit and Rollback</title>
-      <link>https://ronmi.github.io/post/go/defer-commit-rollback/</link>
-      <pubDate>Wed, 16 Sep 2015 00:00:00 +0000</pubDate>
       
-      <guid>https://ronmi.github.io/post/go/defer-commit-rollback/</guid>
-      <description>&lt;p&gt;使用 transaction 的時候，利用 defer 函式的特性 commit 或 rollback 比較合於 Go 的慣例。理論上應該有兩種形式，第一種是利用 &lt;code&gt;Commit()&lt;/code&gt; 之後 &lt;code&gt;Rollback()&lt;/code&gt; 不會真正執行的特性：&lt;/p&gt;
+        <item>
+          <title>defer, Commit and Rollback</title>
+          <link>https://ronmi.github.io/post/go/defer-commit-rollback/</link>
+          <pubDate>Wed, 16 Sep 2015 00:00:00 UTC</pubDate>
+          <author></author>
+          <guid>https://ronmi.github.io/post/go/defer-commit-rollback/</guid>
+          <description>&lt;p&gt;使用 transaction 的時候，利用 defer 函式的特性 commit 或 rollback 比較合於 Go 的慣例。理論上應該有兩種形式，第一種是利用 &lt;code&gt;Commit()&lt;/code&gt; 之後 &lt;code&gt;Rollback()&lt;/code&gt; 不會真正執行的特性：&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;tx, err = db.Begin()
 if err != nil {
@@ -99,15 +100,17 @@ BenchmarkDeferIfElse-8            100000             17816 ns/op
 
 &lt;p&gt;我跑了大概十來次測試，都是直接 Rollback 比較快，雖然只有快幾 % 而已。猜測原因，可能是 panic 跟 recover 這兩個錯誤處理函式耗去了一些效能吧。&lt;/p&gt;
 </description>
-    </item>
-    
-    <item>
-      <title>為 function 加上方法來測試 http handler</title>
-      <link>https://ronmi.github.io/post/go/test-http-handler/</link>
-      <pubDate>Wed, 16 Sep 2015 00:00:00 +0000</pubDate>
+        </item>
       
-      <guid>https://ronmi.github.io/post/go/test-http-handler/</guid>
-      <description>&lt;p&gt;在寫測試的時候，發現自己一直重複使用 &lt;code&gt;NewRequest&lt;/code&gt; 跟 &lt;code&gt;NewRecorder&lt;/code&gt;，所以想到可以在 function 上加上方法來協助處理這些問題。&lt;/p&gt;
+    
+      
+        <item>
+          <title>為 function 加上方法來測試 http handler</title>
+          <link>https://ronmi.github.io/post/go/test-http-handler/</link>
+          <pubDate>Wed, 16 Sep 2015 00:00:00 UTC</pubDate>
+          <author></author>
+          <guid>https://ronmi.github.io/post/go/test-http-handler/</guid>
+          <description>&lt;p&gt;在寫測試的時候，發現自己一直重複使用 &lt;code&gt;NewRequest&lt;/code&gt; 跟 &lt;code&gt;NewRecorder&lt;/code&gt;，所以想到可以在 function 上加上方法來協助處理這些問題。&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;type Test func(http.ResponseWriter, *http.Request)
 
@@ -137,7 +140,9 @@ func (f Test) Get(uri, cookie string) (rec *httptest.ResponseRecorder, err error
 }
 &lt;/code&gt;&lt;/pre&gt;
 </description>
-    </item>
+        </item>
+      
     
+
   </channel>
 </rss>
