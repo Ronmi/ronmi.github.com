@@ -1,13 +1,15 @@
 baseurl = "https://ronmi.github.io"
 languageCode = "zh-tw"
 title = "程式、雜談"
-theme = "material-design"
+theme = "beg"
 
 [blackfriday]
   extensions = ["hardLineBreak"]
 
 [params]
-  twitter = "redmonam"
-  facebook = "ronmi.ren"
-  gplus = "RonmiRen"
-  github = "Ronmi"
+  Twitter = "redmonam"
+  Facebook = "ronmi.ren"
+  Gplus = "RonmiRen"
+  Github = "Ronmi"
+  ShowRelatedPost = true
+  DateForm = "Mon, Jan 2, 2006"
