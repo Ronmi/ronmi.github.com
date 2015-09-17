@@ -1,0 +1,23 @@
+{{ partial "custom/navigation.html" }}
+<ul class="main">
+  {{ $baseurl := $.Site.BaseURL }}
+  {{ range $k, $v := $.Site.Taxonomies }}
+  <li>
+    <span style="cursor:pointer" onclick="$(this).find('~div').toggle('slow');return false">{{ slicestr $k 0 1 | upper }}{{ slicestr $k 1 }}</span>
+    <div style="display:none">
+      {{ range $name, $t := $v }}
+      <div style="margin-left:1em"><a href="{{ $baseurl }}/{{$k}}/{{ $name | urlize }}">
+	  {{ $name }}
+      </a></div>
+      {{ end }}
+    </div>
+  </li>
+  {{ end }}
+</ul>
+{{ if $.Site.Params.description }}
+<section class="aboutme">
+  <p>
+    {{ $.Site.Params.description }}
+  </p>
+</section>
+{{ end }}

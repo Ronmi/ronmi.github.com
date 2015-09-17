@@ -1,20 +1,48 @@
 baseurl = "https://ronmi.github.io/"
 languageCode = "zh-tw"
 title = "程式、雜談"
-theme = "cactus"
+theme = "greyshade"
 
 [blackfriday]
-  extensions = ["hardLineBreak"]
+extensions = ["hardLineBreak"]
+
+[author]
+name = "Ronmi Ren"
+email = "ronmi.ren@gmail.com"
+
+[taxonomies]
+category = "categories"
+tag = "tags"
 
 [params]
-  name = "Ronmi Ren"
-  bio = "Programmer"
-  profile = "https://ronmi.tw/logo128.png"
-  twitter = "redmonam"
-  facebook = "ronmi.ren"
-  Gplus = "RonmiRen"
-  github = "Ronmi"
-  description = "簡單記錄"
-  DateForm = "Mon, Jan 2, 2006"
-  enableRSS = true
-  aboutAuthor = "about me."
+description = "簡單記錄"
+subscribe_rss = "/index.xml"
+facebook_user = "ronmi.ren"
+googleplus_user = "RonmiRen"
+twitter_user = "redmonam"
+github_user = "Ronmi"
+#coderwall_user = ""
+#stackoverflow_user = ""
+#stackoverflow_user_id = ""
+#linkedin_user = ""
+#pinterest_user = ""
+#delicious_user = ""
+#pinboard_user = ""
+#quora_user = ""
+#instagram_user = ""
+#behance_user = ""
+#douban_user = ""
+
+# share links
+facebook_like = true
+twitter_tweet_button = true
+google_plus_one = true
+#addthis_profile_id = ""
+
+# Disqus Comments
+#disqus_short_name = ""
+#disqus_show_comment_count = false
+
+# google analytics
+google_analytics_tracking_id = "UA-67749030-1"
+DateForm = "Mon, Jan 2, 2006"
