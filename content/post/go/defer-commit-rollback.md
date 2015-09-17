@@ -2,6 +2,7 @@
 date = "2015-09-16"
 title = "defer, Commit and Rollback"
 tags = [ "go" ]
+categories = ["go"]
 +++
 
 使用 transaction 的時候，利用 defer 函式的特性 commit 或 rollback 比較合於 Go 的慣例。理論上應該有兩種形式，第一種是利用 `Commit()` 之後 `Rollback()` 不會真正執行的特性：

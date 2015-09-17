@@ -2,6 +2,7 @@
 date = "2015-09-16"
 title = "為 function 加上方法來測試 http handler"
 tags = [ "go" ]
+categories = ["go"]
 +++
 
 在寫測試的時候，發現自己一直重複使用 `NewRequest` 跟 `NewRecorder`，所以想到可以在 function 上加上方法來協助處理這些問題。

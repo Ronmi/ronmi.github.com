@@ -2,6 +2,7 @@
 date = "2015-09-16T14:26:42+08:00"
 title = "有效地去 - Effective go 正體中文翻譯"
 tags = ["go"]
+categories = ["go"]
 +++
 
 ## 簡介
