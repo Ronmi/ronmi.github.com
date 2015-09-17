@@ -1,98 +1,298 @@
-	<!DOCTYPE html>
+<!DOCTYPE HTML>
+
 <html lang="zh-tw">
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<meta name="author" content="Ronmi Ren">
-		<meta name="description" content="簡單記錄">
-		<meta name="generator" content="Hugo 0.15-DEV" />
-		<title>程式、雜談 &middot; 程式、雜談</title>
-		<link rel="shortcut icon" href="https://ronmi.github.io/images/favicon.ico">
-		<link rel="stylesheet" href="https://ronmi.github.io/css/style.css">
-		<link rel="stylesheet" href="https://ronmi.github.io/css/highlight.css">
-		<link href="https://ronmi.github.io/index.xml" rel="alternate" type="application/rss+xml" title="程式、雜談" />
-	</head>
-	<body>
-    <nav class="main-nav">
+
+<head>
+	<meta charset="utf-8">
+	<title>程式、雜談</title>
+	<meta name="author" content="map[name:Ronmi Ren email:ronmi.ren@gmail.com]">
+
 	
+	
+	<meta name="description" content="">
 	
 
 	
-		<a href='https://ronmi.github.io/about'>About</a>
+	<meta name="HandheldFriendly" content="True">
+	<meta name="MobileOptimized" content="320">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    
+	<link href='/index.xml' rel="alternate" title="程式、雜談" type="application/atom+xml">
 	
+	<link rel="canonical" href="https://ronmi.github.io/">
+	<link href="https://ronmi.github.io//favicon.png" rel="shortcut icon">
+	<link href="https://ronmi.github.io//css/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<link href="https://ronmi.github.io//css/font-awesome.min.css" media="screen, projection" rel="stylesheet" type="text/css">
+	
+	<link href='http://fonts.googleapis.com/css?family=Nunito:400,300,700' rel='stylesheet' type='text/css'>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+  
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-67749030-1']);
+		_gaq.push(['_trackPageview']);
 
-	
-	<a class="cta" href="https://ronmi.github.io/index.xml">Subscribe</a>
-	
-</nav>
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
 
-    <div class="profile">
-    <section id="wrapper">
-        <header id="header">
-            <a href='https://ronmi.github.io/about'>
-                <img id="avatar" class="2x" src="https://ronmi.github.io/images/avatar.png"/>
-            </a>
-            <h1>Ronmi Ren</h1>
-            <h2>Programmer</h2>
-        </header>
-    </section>
+
+	<link href="https://ronmi.github.io//css/prism.css" rel="stylesheet" type="text/css">
+	<script>function toggleTag(){$('#tags').toggle()}</script>
+</head>
+
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">
+	
+	
+	<script src="https://ronmi.github.io//js/md5.js"></script>
+	<script type="text/javascript">
+		$(function(){
+			$('.profilepic').append("<img src='http://www.gravatar.com/avatar/" + MD5('ronmi.ren@gmail.com') + "?s=160' alt='Profile Picture' style='width: 160px;' />");
+		});
+	</script>
+	
+	
 </div>
 
-    <section id="wrapper" class="home">
-        <ul id="post-list">
-    
-    
-        
-            <li>
-                <a href='https://ronmi.github.io/post/sony/root-5.1/'><aside class="dates">Sep 17</aside></a>
-                <a href='https://ronmi.github.io/post/sony/root-5.1/'>root Z Ultra 5.1 (368) <h2></h2></a>
-            </li>
-        
-    
-    
-        
-    
-    
-        
-            <li>
-                <a href='https://ronmi.github.io/post/go/effectivego/'><aside class="dates">Sep 16</aside></a>
-                <a href='https://ronmi.github.io/post/go/effectivego/'>有效地去 - Effective go 正體中文翻譯 <h2></h2></a>
-            </li>
-        
-    
-    
-        
-            <li>
-                <a href='https://ronmi.github.io/post/go/defer-commit-rollback/'><aside class="dates">Sep 16</aside></a>
-                <a href='https://ronmi.github.io/post/go/defer-commit-rollback/'>defer, Commit and Rollback <h2></h2></a>
-            </li>
-        
-    
-    
-        
-            <li>
-                <a href='https://ronmi.github.io/post/go/test-http-handler/'><aside class="dates">Sep 16</aside></a>
-                <a href='https://ronmi.github.io/post/go/test-http-handler/'>為 function 加上方法來測試 http handler <h2></h2></a>
-            </li>
-        
-    
+<nav id="main-nav">
+<ul class="main">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about/">About</a></li>
+  <li><a href="/post/">Archives</a></li>
 </ul>
-        <nav id="post-nav">
-    
+
+<ul class="main">
+  
+  
+  <li>
+    <span style="cursor:pointer" onclick="$(this).find('~div').toggle('slow');return false">Categories</span>
+    <div style="display:none">
+      
+      <div style="margin-left:1em"><a href="https://ronmi.github.io//categories/go">
+	  go
+      </a></div>
+      
+      <div style="margin-left:1em"><a href="https://ronmi.github.io//categories/sony">
+	  sony
+      </a></div>
+      
+    </div>
+  </li>
+  
+  <li>
+    <span style="cursor:pointer" onclick="$(this).find('~div').toggle('slow');return false">Tags</span>
+    <div style="display:none">
+      
+      <div style="margin-left:1em"><a href="https://ronmi.github.io//tags/go">
+	  go
+      </a></div>
+      
+      <div style="margin-left:1em"><a href="https://ronmi.github.io//tags/root">
+	  root
+      </a></div>
+      
+      <div style="margin-left:1em"><a href="https://ronmi.github.io//tags/sony">
+	  sony
+      </a></div>
+      
+    </div>
+  </li>
+  
+</ul>
+
+<section class="aboutme">
+  <p>
+    簡單記錄
+  </p>
+</section>
+
 </nav>
-        <footer id="footer">
-    <p class="small">
-        © Copyright 2015 Ronmi Ren
-    </p>
+<nav id="sub-nav">
+	<div class="social">
+		
+			<a class="email" href='mailto:ronmi.ren@gmail.com' title="Email">Email</a>
+		
+		
+			<a class="facebook" href='http://www.facebook.com/ronmi.ren' title="Facebook">Facebook</a>
+		
+		
+			<a class="google" href='https://plus.google.com/RonmiRen' rel="author" title="Google+">Google+</a>
+		
+		
+			<a class="twitter" href='http://twitter.com/redmonam' title="Twitter">Twitter</a>
+		
+		
+			<a class="github" href='https://github.com/Ronmi' title="GitHub">GitHub</a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+    	
+    	
+			<a class="rss" href='/index.xml' title="RSS">RSS</a>
+		
+	</div>
+</nav>
+</header>
+			</div>
+		</div>
+		<div class="mid-col">
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner">
+					
+					<div itemscope itemtype="http://schema.org/Blog">
+					
+				        <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+    <div class="meta">
+		<div class="date"><time datetime='Thu, Sep 17, 2015' data-updated="true" itemprop="datePublished">Thu, Sep 17, 2015</time>
+</div>
+		<div class="tags">
+
+
+	
+	
+	    <a href="https://ronmi.github.io//categories/sony"> sony </a>
+	
+
+
+</div>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="https://ronmi.github.io/post/sony/root-5.1/" itemprop="url">root Z Ultra 5.1 (368)</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>之前升 5.0 的時候在 XDA 找到一鍵 root，用下去看到殘體字介面就覺得完了完了完了。開機後果然發現偷裝 apk，刪掉還會自動重裝；手機反應速度也慢到誇張，開個 Fx beta 要 5～6 秒；Free memory 也只剩約 700 MB。當時就有清空手機重刷的想法，只是一直找不到時間備份資料。前幾天 5.1 更新出來，更新上去發現 root 雖然不見了，可是反應時間沒有改善，決定長痛不如短痛。可惜 XDA 沒有直接教 root 368 的教學，只好自己手動處理。</p>
+
+<p>整個清掉重刷之後果然手機反應速度回復正常，free memory 也回到 1.2 GB，不禁讓人感嘆這後門程式的粗製濫造。同志，走後門也是得裝個樣子你說是不？</p>
+
+		<a href="https://ronmi.github.io/post/sony/root-5.1/" class="more-link">Read on →</a>
+	</div>
+</article>
+
+				    
+				        <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+    <div class="meta">
+		<div class="date"><time datetime='Wed, Sep 16, 2015' data-updated="true" itemprop="datePublished">Wed, Sep 16, 2015</time>
+</div>
+		<div class="tags">
+
+
+	
+	
+	    <a href="https://ronmi.github.io//categories/go"> go </a>
+	
+
+
+</div>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="https://ronmi.github.io/post/go/effectivego/" itemprop="url">有效地去 - Effective go 正體中文翻譯</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<h2 id="簡介:59460734ae8bfafc35f54a1a1aefb011">簡介</h2>
+
+<p>Go 是一門新的程式語言。雖然它從現有的程式語言中借鏡了許多設計理念，但它也有許多與眾不同的特性。若你把用 C++ / Java 撰寫的程式改寫成等價的 Go 程式，恐怕難以得到令人滿意的結果。同樣地，用 Go 語言的角度來解決問題，你可能會寫出有效但不太一樣的程式。換句話說，想要寫出好的 Go 程式，對於 Go 語言特性及慣例的掌握是重要的一環。同時，對於社群慣例 (比如排版、命名方式、程式的建立等等) 也應該要適當的了解，這樣其他使用 Go 語言的開發者才容易理解你寫的程式。</p>
+
+<p>這份文件列舉出一些訣竅，讓你寫出清楚、符合 Go 語言特性的程式。這是對於 <a href="https://golang.org/ref/spec">Go 語言規格書</a>、<a href="https://tour.golang.org/">導覽 Go 語言</a> 以及 <a href="https://golang.org/doc/code.html">如何撰寫 Go 程式</a> 等三份文件的補充，所以你應該先讀過這三份文件。</p>
+
+		<a href="https://ronmi.github.io/post/go/effectivego/" class="more-link">Read on →</a>
+	</div>
+</article>
+
+				    
+				        <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+    <div class="meta">
+		<div class="date"><time datetime='Wed, Sep 16, 2015' data-updated="true" itemprop="datePublished">Wed, Sep 16, 2015</time>
+</div>
+		<div class="tags">
+
+
+	
+	
+	    <a href="https://ronmi.github.io//categories/go"> go </a>
+	
+
+
+</div>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="https://ronmi.github.io/post/go/defer-commit-rollback/" itemprop="url">defer, Commit and Rollback</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>使用 transaction 的時候，利用 defer 函式的特性 commit 或 rollback 比較合於 Go 的慣例。理論上應該有兩種形式，第一種是利用 <code>Commit()</code> 之後 <code>Rollback()</code> 不會真正執行的特性：</p>
+
+		<a href="https://ronmi.github.io/post/go/defer-commit-rollback/" class="more-link">Read on →</a>
+	</div>
+</article>
+
+				    
+				        <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+    <div class="meta">
+		<div class="date"><time datetime='Wed, Sep 16, 2015' data-updated="true" itemprop="datePublished">Wed, Sep 16, 2015</time>
+</div>
+		<div class="tags">
+
+
+	
+	
+	    <a href="https://ronmi.github.io//categories/go"> go </a>
+	
+
+
+</div>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="https://ronmi.github.io/post/go/test-http-handler/" itemprop="url">為 function 加上方法來測試 http handler</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>在寫測試的時候，發現自己一直重複使用 <code>NewRequest</code> 跟 <code>NewRecorder</code>，所以想到可以在 function 上加上方法來協助處理這些問題。</p>
+
+		<a href="https://ronmi.github.io/post/go/test-http-handler/" class="more-link">Read on →</a>
+	</div>
+</article>
+
+				    
+				    </div>
+				    <nav id="pagenavi">
+					    
+					    
+					    <div class="center"><a href="https://ronmi.github.io//post/">Blog Archives</a></div>
+					</nav>
+				</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2015
+
+    Ronmi Ren
+
+Design credit: <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank Mehta</a>
+<script src="https://ronmi.github.io//js/slash.js"></script>
+<script src="https://ronmi.github.io//js/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+	$('pre>code').each(function(i,e){ $(e).addClass('line-numbers')});
+})(jQuery);
+</script>
+<script src="https://ronmi.github.io//js/prism.js"></script>
+
 </footer>
-    </section>
-
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-<script src="https://ronmi.github.io/js/main.js"></script>
-<script src="https://ronmi.github.io/js/highlight.js"></script>
-<script>hljs.initHighlightingOnLoad();</script>
+		</div>
+	</div>
+	
 
 
-    </body>
+	
+</body>
 </html>

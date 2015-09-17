@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Posts on 程式、雜談</title>
+      <title>Posts on 程式、雜談 </title>
+      <generator uri="https://gohugo.io">Hugo</generator>
     <link>https://ronmi.github.io/post/</link>
-    <description>Recent content in Posts on 程式、雜談</description>
-    <generator>Hugo -- gohugo.io</generator>
     <language>zh-tw</language>
-    <lastBuildDate>Thu, 17 Sep 2015 09:12:04 +0800</lastBuildDate>
-    <atom:link href="https://ronmi.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <author>Ronmi Ren</author>
+    
+    <updated>Thu, 17 Sep 2015 09:12:04 CST</updated>
     
     <item>
       <title>root Z Ultra 5.1 (368)</title>
       <link>https://ronmi.github.io/post/sony/root-5.1/</link>
-      <pubDate>Thu, 17 Sep 2015 09:12:04 +0800</pubDate>
-      
+      <pubDate>Thu, 17 Sep 2015 09:12:04 CST</pubDate>
+      <author>Ronmi Ren</author>
       <guid>https://ronmi.github.io/post/sony/root-5.1/</guid>
       <description>
 
@@ -63,8 +63,8 @@
     <item>
       <title>有效地去 - Effective go 正體中文翻譯</title>
       <link>https://ronmi.github.io/post/go/effectivego/</link>
-      <pubDate>Wed, 16 Sep 2015 14:26:42 +0800</pubDate>
-      
+      <pubDate>Wed, 16 Sep 2015 14:26:42 CST</pubDate>
+      <author>Ronmi Ren</author>
       <guid>https://ronmi.github.io/post/go/effectivego/</guid>
       <description>
 
@@ -2156,8 +2156,8 @@ value=&amp;quot;Show QR&amp;quot; name=qr&amp;gt;
     <item>
       <title>defer, Commit and Rollback</title>
       <link>https://ronmi.github.io/post/go/defer-commit-rollback/</link>
-      <pubDate>Wed, 16 Sep 2015 00:00:00 +0000</pubDate>
-      
+      <pubDate>Wed, 16 Sep 2015 00:00:00 UTC</pubDate>
+      <author>Ronmi Ren</author>
       <guid>https://ronmi.github.io/post/go/defer-commit-rollback/</guid>
       <description>&lt;p&gt;使用 transaction 的時候，利用 defer 函式的特性 commit 或 rollback 比較合於 Go 的慣例。理論上應該有兩種形式，第一種是利用 &lt;code&gt;Commit()&lt;/code&gt; 之後 &lt;code&gt;Rollback()&lt;/code&gt; 不會真正執行的特性：&lt;/p&gt;
 
@@ -2248,8 +2248,8 @@ BenchmarkDeferIfElse-8            100000             17816 ns/op
     <item>
       <title>為 function 加上方法來測試 http handler</title>
       <link>https://ronmi.github.io/post/go/test-http-handler/</link>
-      <pubDate>Wed, 16 Sep 2015 00:00:00 +0000</pubDate>
-      
+      <pubDate>Wed, 16 Sep 2015 00:00:00 UTC</pubDate>
+      <author>Ronmi Ren</author>
       <guid>https://ronmi.github.io/post/go/test-http-handler/</guid>
       <description>&lt;p&gt;在寫測試的時候，發現自己一直重複使用 &lt;code&gt;NewRequest&lt;/code&gt; 跟 &lt;code&gt;NewRecorder&lt;/code&gt;，所以想到可以在 function 上加上方法來協助處理這些問題。&lt;/p&gt;
 
