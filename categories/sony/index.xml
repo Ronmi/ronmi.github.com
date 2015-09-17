@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sony on 程式、雜談</title>
+    <link>https://ronmi.github.io/categories/sony/</link>
+    <description>Recent content in Sony on 程式、雜談</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-tw</language>
+    <lastBuildDate>Thu, 17 Sep 2015 09:12:04 +0800</lastBuildDate>
+    <atom:link href="https://ronmi.github.io/categories/sony/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>root Z Ultra 5.1 (368)</title>
+      <link>https://ronmi.github.io/post/sony/root-5.1/</link>
+      <pubDate>Thu, 17 Sep 2015 09:12:04 +0800</pubDate>
+      
+      <guid>https://ronmi.github.io/post/sony/root-5.1/</guid>
+      <description>
+
+&lt;p&gt;之前升 5.0 的時候在 XDA 找到一鍵 root，用下去看到殘體字介面就覺得完了完了完了。開機後果然發現偷裝 apk，刪掉還會自動重裝；手機反應速度也慢到誇張，開個 Fx beta 要 5～6 秒；Free memory 也只剩約 700 MB。當時就有清空手機重刷的想法，只是一直找不到時間備份資料。前幾天 5.1 更新出來，更新上去發現 root 雖然不見了，可是反應時間沒有改善，決定長痛不如短痛。可惜 XDA 沒有直接教 root 368 的教學，只好自己手動處理。&lt;/p&gt;
+
+&lt;p&gt;整個清掉重刷之後果然手機反應速度回復正常，free memory 也回到 1.2 GB，不禁讓人感嘆這後門程式的粗製濫造。同志，走後門也是得裝個樣子你說是不？&lt;/p&gt;
+
+&lt;h2 id=&#34;tools:2f643943f70f9c01d7e42e97920cdc40&#34;&gt;Tools&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://mega.co.nz/#!nEAzHb6A!5aTtcHZtqgA3W7rRADI7To8DwaOxBZtEnOkezQoiITE&#34;&gt;舊版台灣ftf&lt;/a&gt;&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.flashtool.net/index.php&#34;&gt;Flashtool&lt;/a&gt;&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://forum.xda-developers.com/crossdevice-dev/sony/tool-prfcreator-easily-create-pre-t2859904&#34;&gt;PRFCreator&lt;/a&gt;&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://nut.xperia-files.com/&#34;&gt;XZlockeddualrecovery&lt;/a&gt; installer 跟 flashable 兩個版本都要下載&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://download.chainfire.eu/696/SuperSU&#34;&gt;SuperSU&lt;/a&gt;&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;synopsis:2f643943f70f9c01d7e42e97920cdc40&#34;&gt;Synopsis&lt;/h2&gt;
+
+&lt;p&gt;根據 XZlockeddualrecovery 的警告，我推測這個刷法對 Unlocked Bootloader 可能會有無法預期的後果，要用這個方法之前建議還是先 Relock&lt;/p&gt;
+
+&lt;p&gt;下載 FTF 可能會佔去數 GB 的空間。&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;用 flashtool 裡的 iFirm 下載最新版 ftf&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;用 PRFCreator 產生 flashable zip 並放進手機 SD 卡&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;用 flashtool 刷舊版 ftf&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;用 installer 安裝 recovery&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;flash zip、清 delvik 快取、poweroff&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;用 flashtool 刷新版 ftf (需避開 system, partition 跟 TA)&lt;br /&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&#34;tips:2f643943f70f9c01d7e42e97920cdc40&#34;&gt;Tips&lt;/h2&gt;
+
+&lt;p&gt;iFirm 用法：點左邊選手機型號，點中間選韌體的區域，最右邊會有可下載的韌體版本，有點小字不是很容易注意到。&lt;/p&gt;
+
+&lt;p&gt;PRFCreator 產生的是 flashable zip 不是 ftf。它使用的 recovery zip 要 flashable 版。&lt;/p&gt;
+
+&lt;p&gt;Flashtool 附的驅動記得要裝。&lt;/p&gt;
+
+&lt;p&gt;flash zip 清快取之後直接從 recovery 的主選單關機。&lt;/p&gt;
+
+&lt;p&gt;刷新版 ftf 的時候可以順便把 USER DATA 清掉。&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

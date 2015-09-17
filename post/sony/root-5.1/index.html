@@ -1,0 +1,152 @@
+    <!DOCTYPE html>
+<html lang="zh-tw">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="author" content="Ronmi Ren">
+		<meta name="description" content="簡單記錄">
+		<meta name="generator" content="Hugo 0.15-DEV" />
+		<title>root Z Ultra 5.1 (368) &middot; 程式、雜談</title>
+		<link rel="shortcut icon" href="https://ronmi.github.io/images/favicon.ico">
+		<link rel="stylesheet" href="https://ronmi.github.io/css/style.css">
+		<link rel="stylesheet" href="https://ronmi.github.io/css/highlight.css">
+		<link href="https://ronmi.github.io/index.xml" rel="alternate" type="application/rss+xml" title="程式、雜談" />
+	</head>
+    <body>
+       <nav class="main-nav">
+	
+	
+		<a href='https://ronmi.github.io/'> <span class="arrow">←</span>Home</a>
+	
+
+	
+		<a href='https://ronmi.github.io/about'>About</a>
+	
+
+	
+	<a class="cta" href="">Subscribe</a>
+	
+</nav>
+
+        <section id="wrapper">
+            <article class="post">
+                <header>
+                    <h1>root Z Ultra 5.1 (368)</h1>
+                    <h2 class="headline">September 17, 2015</h2>
+                </header>
+                <section id="post-body">
+                    
+
+<p>之前升 5.0 的時候在 XDA 找到一鍵 root，用下去看到殘體字介面就覺得完了完了完了。開機後果然發現偷裝 apk，刪掉還會自動重裝；手機反應速度也慢到誇張，開個 Fx beta 要 5～6 秒；Free memory 也只剩約 700 MB。當時就有清空手機重刷的想法，只是一直找不到時間備份資料。前幾天 5.1 更新出來，更新上去發現 root 雖然不見了，可是反應時間沒有改善，決定長痛不如短痛。可惜 XDA 沒有直接教 root 368 的教學，只好自己手動處理。</p>
+
+<p>整個清掉重刷之後果然手機反應速度回復正常，free memory 也回到 1.2 GB，不禁讓人感嘆這後門程式的粗製濫造。同志，走後門也是得裝個樣子你說是不？</p>
+
+<h2 id="tools:2f643943f70f9c01d7e42e97920cdc40">Tools</h2>
+
+<ul>
+<li><a href="https://mega.co.nz/#!nEAzHb6A!5aTtcHZtqgA3W7rRADI7To8DwaOxBZtEnOkezQoiITE">舊版台灣ftf</a><br /></li>
+<li><a href="http://www.flashtool.net/index.php">Flashtool</a><br /></li>
+<li><a href="http://forum.xda-developers.com/crossdevice-dev/sony/tool-prfcreator-easily-create-pre-t2859904">PRFCreator</a><br /></li>
+<li><a href="http://nut.xperia-files.com/">XZlockeddualrecovery</a> installer 跟 flashable 兩個版本都要下載<br /></li>
+<li><a href="https://download.chainfire.eu/696/SuperSU">SuperSU</a><br /></li>
+</ul>
+
+<h2 id="synopsis:2f643943f70f9c01d7e42e97920cdc40">Synopsis</h2>
+
+<p>根據 XZlockeddualrecovery 的警告，我推測這個刷法對 Unlocked Bootloader 可能會有無法預期的後果，要用這個方法之前建議還是先 Relock</p>
+
+<p>下載 FTF 可能會佔去數 GB 的空間。</p>
+
+<ol>
+<li>用 flashtool 裡的 iFirm 下載最新版 ftf<br /></li>
+<li>用 PRFCreator 產生 flashable zip 並放進手機 SD 卡<br /></li>
+<li>用 flashtool 刷舊版 ftf<br /></li>
+<li>用 installer 安裝 recovery<br /></li>
+<li>flash zip、清 delvik 快取、poweroff<br /></li>
+<li>用 flashtool 刷新版 ftf (需避開 system, partition 跟 TA)<br /></li>
+</ol>
+
+<h2 id="tips:2f643943f70f9c01d7e42e97920cdc40">Tips</h2>
+
+<p>iFirm 用法：點左邊選手機型號，點中間選韌體的區域，最右邊會有可下載的韌體版本，有點小字不是很容易注意到。</p>
+
+<p>PRFCreator 產生的是 flashable zip 不是 ftf。它使用的 recovery zip 要 flashable 版。</p>
+
+<p>Flashtool 附的驅動記得要裝。</p>
+
+<p>flash zip 清快取之後直接從 recovery 的主選單關機。</p>
+
+<p>刷新版 ftf 的時候可以順便把 USER DATA 清掉。</p>
+
+                </section>
+            </article>
+            <footer id="post-meta" class="clearfix">
+                <a href="https://twitter.com/redmonam">
+                        <img class="avatar" src="https://ronmi.github.io/images/avatar.png">
+                        <div>
+                            <span class="dark">Ronmi Ren</span>
+                            <span>about me.</span>
+                        </div>
+                    </a>
+                <section id="sharing">
+                    <a class="twitter" href="https://twitter.com/intent/tweet?text=https://ronmi.github.io/https%3a%2f%2fronmi.github.io%2fpost%2fsony%2froot-5.1%2f - root%20Z%20Ultra%205.1%20%28368%29 by @redmonam"><span class="icon-twitter"> Tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+                </section>
+            </footer>
+
+            
+
+            <ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+    
+    
+        
+   
+    
+        
+   
+    
+        
+        <li>
+            <a href="https://ronmi.github.io/post/go/effectivego/">有效地去 - Effective go 正體中文翻譯<aside class="dates">Sep 16</aside></a>
+        </li>
+        
+   
+    
+        
+        <li>
+            <a href="https://ronmi.github.io/post/go/defer-commit-rollback/">defer, Commit and Rollback<aside class="dates">Sep 16</aside></a>
+        </li>
+        
+   
+    
+        
+        <li>
+            <a href="https://ronmi.github.io/post/go/test-http-handler/">為 function 加上方法來測試 http handler<aside class="dates">Sep 16</aside></a>
+        </li>
+        
+   
+</ul>
+            <footer id="footer">
+    <p class="small">
+        © Copyright 2015 Ronmi Ren
+    </p>
+</footer>
+        </section>
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://ronmi.github.io/js/main.js"></script>
+<script src="https://ronmi.github.io/js/highlight.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+    </body>
+</html>
