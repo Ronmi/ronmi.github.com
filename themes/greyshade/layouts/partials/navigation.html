@@ -4,9 +4,9 @@
   {{ range $k, $v := $.Site.Taxonomies }}
   <li>
     <span style="cursor:pointer" onclick="$(this).find('~div').toggle('slow');return false">{{ slicestr $k 0 1 | upper }}{{ slicestr $k 1 }}</span>
-    <div style="display:none">
+    <div class="taxonomy">
       {{ range $name, $t := $v }}
-      <div style="margin-left:1em"><a href="{{ $baseurl }}/{{$k}}/{{ $name | urlize }}">
+      <div><a href="{{ $baseurl }}/{{$k}}/{{ $name | urlize }}">
 	  {{ $name }}
       </a></div>
       {{ end }}
