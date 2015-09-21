@@ -3,7 +3,7 @@
   {{ $baseurl := $.Site.BaseURL }}
   {{ range $k, $v := $.Site.Taxonomies }}
   <li>
-    <span style="cursor:pointer" onclick="$(this).find('~div').toggle('slow');return false">{{ slicestr $k 0 1 | upper }}{{ slicestr $k 1 }}</span>
+    <span style="cursor:pointer" onclick="$(this).find('~div').slideToggle('slow');return false">{{ slicestr $k 0 1 | upper }}{{ slicestr $k 1 }}</span>
     <div class="taxonomy">
       {{ range $name, $t := $v }}
       <div><a href="{{ $baseurl }}/{{$k}}/{{ $name | urlize }}">
