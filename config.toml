@@ -15,7 +15,7 @@ category = "categories"
 tag = "tags"
 
 [params]
-description = "簡單記錄"
+description = "技術、閒話、簡單記錄"
 subscribe_rss = "/index.xml"
 facebook_user = "ronmi.ren"
 googleplus_user = "RonmiRen"
@@ -40,8 +40,8 @@ google_plus_one = true
 #addthis_profile_id = ""
 
 # Disqus Comments
-#disqus_short_name = ""
-#disqus_show_comment_count = false
+disqus_short_name = "ronmi"
+disqus_show_comment_count = true
 
 # google analytics
 google_analytics_tracking_id = "UA-67749030-1"
