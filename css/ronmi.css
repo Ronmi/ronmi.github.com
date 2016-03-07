@@ -6,12 +6,18 @@
     margin-left: 1em;
 }
 
-@media only screen and (max-width: 768px) {
+@media only screen and (max-width: 600px) {
     .taxonomy {
 	border: 1px solid grey;
     }
     .taxonomy>div {
 	margin-left: 0;
 	display: inline-block;
+    }
+}
+
+@media only screen and (min-width: 830px) {
+    .container .left-col {
+        overflow-y: auto;
     }
 }
