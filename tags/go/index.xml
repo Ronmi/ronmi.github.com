@@ -56,7 +56,8 @@
 &lt;ul&gt;
 &lt;li&gt;縮排：我們使用 Tab 來縮排，&lt;code&gt;gofmt&lt;/code&gt; 預設會忽略它們。非必要的話別使用空白來縮排。&lt;br /&gt;&lt;/li&gt;
 &lt;li&gt;行寬：Go 沒有行寬限制，不用擔心你的程式碼太長。如果你真的覺得它太長了，可以換行並縮排它。&lt;br /&gt;&lt;/li&gt;
-&lt;li&gt;括號：Go 需要的括號遠比 C++ / Java 來得少：流程控制敘述 (if, for, switch) 沒有小括號。運算子之間的優先順序也會以排版的方式突顯。比如&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;括號：Go 需要的括號遠比 C++ / Java 來得少：流程控制敘述 (if, for, switch) 沒有小括號。運算子之間的優先順序也會以排版的方式突顯。比如&lt;br /&gt;
+&lt;br /&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;x&amp;lt;&amp;lt;8 + y&amp;lt;&amp;lt;16
@@ -275,7 +276,8 @@ codeUsing(f, d)
 &lt;ul&gt;
 &lt;li&gt;必須要在相同的有效範圍 (scope) 內。如果是不同的有效範圍就會變成宣告一個同名的、全新的區域變數 (註)。&lt;br /&gt;&lt;/li&gt;
 &lt;li&gt;型別要相同。&lt;br /&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;:=&lt;/code&gt; 左邊至少要有一個之前沒有宣告過的變數。&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;:=&lt;/code&gt; 左邊至少要有一個之前沒有宣告過的變數。&lt;br /&gt;
+&lt;br /&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;這個特性雖然不太常見，但卻很實用。這會讓你簡單地重用相同的 &lt;code&gt;err&lt;/code&gt; 變數，這種用法在一長串的 &lt;em&gt;if-else&lt;/em&gt; 中特別常見。&lt;/p&gt;
@@ -706,7 +708,8 @@ v := make([]int, 100)
 &lt;ul&gt;
 &lt;li&gt;Go 語言的 array 是單純的值。把 array 指定給變數的時候會複製一份副本。&lt;br /&gt;&lt;/li&gt;
 &lt;li&gt;同樣的，把 array 當成參數傳入函式的時候，函式內收到的會是副本。&lt;br /&gt;&lt;/li&gt;
-&lt;li&gt;array 的長度是型別的一部份，也就是說 &lt;code&gt;[10]int&lt;/code&gt; 和 &lt;code&gt;[20]int&lt;/code&gt; 屬於不同型別。&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;array 的長度是型別的一部份，也就是說 &lt;code&gt;[10]int&lt;/code&gt; 和 &lt;code&gt;[20]int&lt;/code&gt; 屬於不同型別。&lt;br /&gt;
+&lt;br /&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;Array 是值這件事有時候很有用，有時候卻代價高昂。如果你需要類似 C 語言陣列那樣的行為，你可以用指標：&lt;/p&gt;

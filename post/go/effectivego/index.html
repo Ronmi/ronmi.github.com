@@ -77,6 +77,14 @@
     <span style="cursor:pointer" onclick="$(this).find('~div').slideToggle('slow');return false">Categories</span>
     <div class="taxonomy">
       
+      <div><a href="https://ronmi.github.io//categories/docker">
+	  docker
+      </a></div>
+      
+      <div><a href="https://ronmi.github.io//categories/gitlab">
+	  gitlab
+      </a></div>
+      
       <div><a href="https://ronmi.github.io//categories/go">
 	  go
       </a></div>
@@ -91,6 +99,14 @@
   <li>
     <span style="cursor:pointer" onclick="$(this).find('~div').slideToggle('slow');return false">Tags</span>
     <div class="taxonomy">
+      
+      <div><a href="https://ronmi.github.io//tags/docker">
+	  docker
+      </a></div>
+      
+      <div><a href="https://ronmi.github.io//tags/gitlab">
+	  gitlab
+      </a></div>
       
       <div><a href="https://ronmi.github.io//tags/go">
 	  go
@@ -199,7 +215,8 @@
 <ul>
 <li>縮排：我們使用 Tab 來縮排，<code>gofmt</code> 預設會忽略它們。非必要的話別使用空白來縮排。<br /></li>
 <li>行寬：Go 沒有行寬限制，不用擔心你的程式碼太長。如果你真的覺得它太長了，可以換行並縮排它。<br /></li>
-<li>括號：Go 需要的括號遠比 C++ / Java 來得少：流程控制敘述 (if, for, switch) 沒有小括號。運算子之間的優先順序也會以排版的方式突顯。比如<br /></li>
+<li>括號：Go 需要的括號遠比 C++ / Java 來得少：流程控制敘述 (if, for, switch) 沒有小括號。運算子之間的優先順序也會以排版的方式突顯。比如<br />
+<br /></li>
 </ul>
 
 <pre><code class="language-go">x&lt;&lt;8 + y&lt;&lt;16
@@ -418,7 +435,8 @@ codeUsing(f, d)
 <ul>
 <li>必須要在相同的有效範圍 (scope) 內。如果是不同的有效範圍就會變成宣告一個同名的、全新的區域變數 (註)。<br /></li>
 <li>型別要相同。<br /></li>
-<li><code>:=</code> 左邊至少要有一個之前沒有宣告過的變數。<br /></li>
+<li><code>:=</code> 左邊至少要有一個之前沒有宣告過的變數。<br />
+<br /></li>
 </ul>
 
 <p>這個特性雖然不太常見，但卻很實用。這會讓你簡單地重用相同的 <code>err</code> 變數，這種用法在一長串的 <em>if-else</em> 中特別常見。</p>
@@ -849,7 +867,8 @@ v := make([]int, 100)
 <ul>
 <li>Go 語言的 array 是單純的值。把 array 指定給變數的時候會複製一份副本。<br /></li>
 <li>同樣的，把 array 當成參數傳入函式的時候，函式內收到的會是副本。<br /></li>
-<li>array 的長度是型別的一部份，也就是說 <code>[10]int</code> 和 <code>[20]int</code> 屬於不同型別。<br /></li>
+<li>array 的長度是型別的一部份，也就是說 <code>[10]int</code> 和 <code>[20]int</code> 屬於不同型別。<br />
+<br /></li>
 </ul>
 
 <p>Array 是值這件事有時候很有用，有時候卻代價高昂。如果你需要類似 C 語言陣列那樣的行為，你可以用指標：</p>
@@ -2292,7 +2311,7 @@ value=&quot;Show QR&quot; name=qr&gt;
 				    </div>
 				</div>
 			</div>
-			<footer id="footer" class="inner">Copyright &copy; 2015
+			<footer id="footer" class="inner">Copyright &copy; 2016
 
     Ronmi Ren
 

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+      <title>Docker on 程式、雜談 </title>
+      <generator uri="https://gohugo.io">Hugo</generator>
+    <link>https://ronmi.github.io/tags/docker/</link>
+    <language>zh-tw</language>
+    <author>Ronmi Ren</author>
+    
+    <updated>Mon, 07 Mar 2016 13:44:17 CST</updated>
+    
+    <item>
+      <title>gitlab-ci and docker</title>
+      <link>https://ronmi.github.io/post/docker/gitlab-ci-docker/</link>
+      <pubDate>Mon, 07 Mar 2016 13:44:17 CST</pubDate>
+      <author>Ronmi Ren</author>
+      <guid>https://ronmi.github.io/post/docker/gitlab-ci-docker/</guid>
+      <description>
+
+&lt;p&gt;最近在學 CI/CD 相關的課題，研究了一下 Jenkins 但是覺得太過肥大。GitLab 本體雖然也是肥肥的 ruby，不過 gitlab-ci 預設的 gitlab-multirunner 到是 go 寫的，相當輕量；能與 GitLab 深度整合這點也還不錯。&lt;/p&gt;
+
+&lt;p&gt;gitlab-multirunner 支援 docker。由於我的 GitLab 本體和 ci 都是裝在 docker 裡面的。為了要在 build job 中做 docker build，所以一開始考慮用 docker-in-docker (dind)。不過 dind 有效能和 cgroup namespace 等等問題，所以後來改成將外部 docker socket 掛入 container 入的方式。這衍生了另一個問題：gitlab-multirunner 會針對每一個 job 下載必要的 image、開啟複數個 container，讓外部的 docker 看起來十分複雜，造成管理的困難。&lt;/p&gt;
+
+&lt;p&gt;這篇記錄了我的另一個解法：啟動另一個獨立的 docker daemon 專供 build/test/deploy job 使用。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;註：以下適用 docker 1.10 以後的版本，舊版「理論上可以」，但我沒有測試，不保證能通用&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h1 id=&#34;準備工作:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;準備工作&lt;/h1&gt;
+
+&lt;p&gt;由於 Docker 本身的設計並不適合讓兩個 docker daemon 共用資源，所以要先把網路、儲存設備先準備好。&lt;/p&gt;
+
+&lt;h2 id=&#34;網路:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;網路&lt;/h2&gt;
+
+&lt;p&gt;Docker 預設使用 &lt;code&gt;docker0&lt;/code&gt; 這個橋接介面，所以我們針對第二個 docker daemon 建立一個新的橋接器，再用 &lt;code&gt;-b&lt;/code&gt; 指定給它：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;brctl addbr docker1
+ip addr add 10.9.0.1/16 dev docker1
+ip link set dev docker1 up
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;或是用 systemd&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;/etc/systemd/network/docker1.netdev&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[NetDev]
+Name=docker1
+Kind=bridge
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;/etc/systemd/network/docker1.network&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;[Match]
+Name=docker1
+
+[Network]
+Address=10.9.0.1/16
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Reload&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;systemctl daemon-reload
+systemctl restart systemd-networkd
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;ip 要記得調開，不要跟已知的網段 (包括第一個 docker) 重覆。&lt;/p&gt;
+
+&lt;h2 id=&#34;儲存設備:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;儲存設備&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;mkdir -p /docker2/graph /docker2/tmp
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;graph 目錄是存放 image/container 用的，tmp 則是暫存目錄；pid/socket 存放在 &lt;code&gt;/docker2&lt;/code&gt;&lt;/p&gt;
+
+&lt;h1 id=&#34;wrapper:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;Wrapper&lt;/h1&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;#!/bin/bash
+
+DOCKER_HOST=unix:///docker2/docker.sock
+DOCKER_TMPDIR=/docker2/tmp
+
+export DOCKER_HOST DOCKER_TMPDIR
+
+exec docker &amp;quot;$@&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;另存成 &lt;code&gt;/usr/local/bin/docker2&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;註：不要忘了加執行權限&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h1 id=&#34;init-設定:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;init 設定&lt;/h1&gt;
+
+&lt;p&gt;為了簡便，第二個 docker 會使用 loop devicemapper。&lt;/p&gt;
+
+&lt;h2 id=&#34;systemd:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;systemd&lt;/h2&gt;
+
+&lt;p&gt;先把 &lt;code&gt;/lib/systemd/system/docker.socket&lt;/code&gt; 和 &lt;code&gt;/lib/systemd/system/docker.service&lt;/code&gt; 複製一份到 &lt;code&gt;/etc/systemd/system&lt;/code&gt;，然後把複本檔名裡的 &lt;code&gt;docker&lt;/code&gt; 改成 &lt;code&gt;docker2&lt;/code&gt;。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;docker2.socket&lt;/code&gt; 要改的地方有兩個： (說明部份也可以視需要更改)&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;PartOf: 把 &lt;code&gt;docker&lt;/code&gt; 改成 &lt;code&gt;docker2&lt;/code&gt;&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;ListenStream: 改成 &lt;code&gt;/docket2/docker.sock&lt;/code&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;code&gt;docker2.service&lt;/code&gt; 要改的有三個: (說明部份也可以視需要更改)&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;After: 把 &lt;code&gt;docker&lt;/code&gt; 改成 &lt;code&gt;docker2&lt;/code&gt;&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;Requires: 把 &lt;code&gt;docker&lt;/code&gt; 改成 &lt;code&gt;docker2&lt;/code&gt;&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;ExecStart: 改成 &lt;code&gt;/usr/bin/docker daemon -H fd:// -g /docker2/graph -s devicemapper -p /docker2/docker.pid -b docker1&lt;/code&gt;。視需要加上其他參數，比如 &lt;code&gt;--dns&lt;/code&gt; 或 &lt;code&gt;--insecure-registry&lt;/code&gt; 等等&lt;br /&gt;
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;啟動試試&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;systemctl daemon-reload
+systemctl start docker2
+docker2 info
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;正常的話就可以設為預設啟動了&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;systemctl enable docker2
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h1 id=&#34;建立-gitlab-ci-runner:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;建立 gitlab-ci runner&lt;/h1&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;docker run -d --name runner1 --hostname runner1 -v /docker2/docker.sock:/var/run/docker.sock --privileged --restart always gitlab/gitlab-runner
+docker exec -it runner1 gitlab-runner register -n -r &amp;quot;gitlab-runner-register-token&amp;quot; --url &amp;quot;http://your.gitlab.url/ci&amp;quot; --executor docker --docker-image gitlab/dind --docker-privileged --name runner1 --docker-volumes /var/run/docker.sock:/var/run/docker.sock
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;說明一下 gitlab-runner register 的參數&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;-r&lt;/code&gt;: register token&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--url&lt;/code&gt;: GitLab 本體提供的 API 位址，如果本體跟 runner 跑在同一台機器的 docker 裡的話，建立 runner container 的時候可能要用 &lt;code&gt;--link&lt;/code&gt; 連起來&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--executor&lt;/code&gt;: 指定 job executor&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--docker-image&lt;/code&gt;: 預設用來執行 job 的 image&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--docker-privileged&lt;/code&gt;: 不加這個就不能存取外部的 docker 了&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--docker-volumes&lt;/code&gt;: 把 runner 裡的 docker socket 掛進 job container 裡。由於在建立 runner container 的時候我們把第二個 docker 的 socket 指定給 runner 了，所以 job container 存取到的會是第二個 docker&lt;br /&gt;
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h1 id=&#34;完成:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;完成&lt;/h1&gt;
+
+&lt;p&gt;指定一個 build job 給新的 runner，應該就可以用 &lt;code&gt;docker2 ps -a&lt;/code&gt; 和 &lt;code&gt;docker2 images&lt;/code&gt; 看到 job container 及相關資訊。&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

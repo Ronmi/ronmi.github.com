@@ -4,7 +4,7 @@
 
 <head>
 	<meta charset="utf-8">
-	<title>為 function 加上方法來測試 http handler - 程式、雜談</title>
+	<title>gitlab-ci and docker - 程式、雜談</title>
 	<meta name="author" content="map[name:Ronmi Ren email:ronmi.ren@gmail.com]">
 
 	
@@ -19,7 +19,7 @@
     
 	<link href='/index.xml' rel="alternate" title="程式、雜談" type="application/atom+xml">
 	
-	<link rel="canonical" href="https://ronmi.github.io/post/go/test-http-handler/">
+	<link rel="canonical" href="https://ronmi.github.io/post/docker/gitlab-ci-docker/">
 	<link href="https://ronmi.github.io//favicon.png" rel="shortcut icon">
 	<link href="https://ronmi.github.io//css/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
 	<link href="https://ronmi.github.io//css/font-awesome.min.css" media="screen, projection" rel="stylesheet" type="text/css">
@@ -173,36 +173,137 @@
 				<div id="content" class="inner">
 					<div itemscope itemtype="http://schema.org/Blog">
 					<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
-    <h1 class="title" itemprop="name">為 function 加上方法來測試 http handler</h1>
-	<div class="entry-content" itemprop="articleBody"><p>在寫測試的時候，發現自己一直重複使用 <code>NewRequest</code> 跟 <code>NewRecorder</code>，所以想到可以在 function 上加上方法來協助處理這些問題。</p>
+    <h1 class="title" itemprop="name">gitlab-ci and docker</h1>
+	<div class="entry-content" itemprop="articleBody">
 
-<pre><code class="language-go">type Test func(http.ResponseWriter, *http.Request)
+<p>最近在學 CI/CD 相關的課題，研究了一下 Jenkins 但是覺得太過肥大。GitLab 本體雖然也是肥肥的 ruby，不過 gitlab-ci 預設的 gitlab-multirunner 到是 go 寫的，相當輕量；能與 GitLab 深度整合這點也還不錯。</p>
 
-func (f Test) Get(uri, cookie string) (rec *httptest.ResponseRecorder, err error) {
-	rec = httptest.NewRecorder()
-	req, err := http.NewRequest(&quot;GET&quot;, uri, nil)
-	if err != nil {
-		return
-	}
-	req.Header.Add(&quot;Cookie&quot;, cookie)
-	f(rec, req)
-	return
-}
+<p>gitlab-multirunner 支援 docker。由於我的 GitLab 本體和 ci 都是裝在 docker 裡面的。為了要在 build job 中做 docker build，所以一開始考慮用 docker-in-docker (dind)。不過 dind 有效能和 cgroup namespace 等等問題，所以後來改成將外部 docker socket 掛入 container 入的方式。這衍生了另一個問題：gitlab-multirunner 會針對每一個 job 下載必要的 image、開啟複數個 container，讓外部的 docker 看起來十分複雜，造成管理的困難。</p>
+
+<p>這篇記錄了我的另一個解法：啟動另一個獨立的 docker daemon 專供 build/test/deploy job 使用。</p>
+
+<p><strong>註：以下適用 docker 1.10 以後的版本，舊版「理論上可以」，但我沒有測試，不保證能通用</strong></p>
+
+<h1 id="準備工作:f370d75d42e29bc27188dc29fb29e84e">準備工作</h1>
+
+<p>由於 Docker 本身的設計並不適合讓兩個 docker daemon 共用資源，所以要先把網路、儲存設備先準備好。</p>
+
+<h2 id="網路:f370d75d42e29bc27188dc29fb29e84e">網路</h2>
+
+<p>Docker 預設使用 <code>docker0</code> 這個橋接介面，所以我們針對第二個 docker daemon 建立一個新的橋接器，再用 <code>-b</code> 指定給它：</p>
+
+<pre><code class="language-sh">brctl addbr docker1
+ip addr add 10.9.0.1/16 dev docker1
+ip link set dev docker1 up
 </code></pre>
 
-<p>使用起來像這樣</p>
+<p>或是用 systemd</p>
 
-<pre><code class="language-go">func TestMyhandler(t *testing.T) {
-	resp, err := Test(myhandler).Get(&quot;/api/action&quot;, &quot;&quot;)
-	if err != nil {
-		t.Fatalf(&quot;Failed to create request for /api/action: %s&quot;, err)
-	}
+<p><code>/etc/systemd/network/docker1.netdev</code>:</p>
 
-	if resp.Body.String() != &quot;success&quot; {
-		t.Errorf(&quot;Request to /api/action failed: %s&quot;, resp.Body.String())
-	}
-}
+<pre><code>[NetDev]
+Name=docker1
+Kind=bridge
 </code></pre>
+
+<p><code>/etc/systemd/network/docker1.network</code>:</p>
+
+<pre><code>[Match]
+Name=docker1
+
+[Network]
+Address=10.9.0.1/16
+</code></pre>
+
+<p>Reload</p>
+
+<pre><code class="language-sh">systemctl daemon-reload
+systemctl restart systemd-networkd
+</code></pre>
+
+<p>ip 要記得調開，不要跟已知的網段 (包括第一個 docker) 重覆。</p>
+
+<h2 id="儲存設備:f370d75d42e29bc27188dc29fb29e84e">儲存設備</h2>
+
+<pre><code class="language-sh">mkdir -p /docker2/graph /docker2/tmp
+</code></pre>
+
+<p>graph 目錄是存放 image/container 用的，tmp 則是暫存目錄；pid/socket 存放在 <code>/docker2</code></p>
+
+<h1 id="wrapper:f370d75d42e29bc27188dc29fb29e84e">Wrapper</h1>
+
+<pre><code class="language-sh">#!/bin/bash
+
+DOCKER_HOST=unix:///docker2/docker.sock
+DOCKER_TMPDIR=/docker2/tmp
+
+export DOCKER_HOST DOCKER_TMPDIR
+
+exec docker &quot;$@&quot;
+</code></pre>
+
+<p>另存成 <code>/usr/local/bin/docker2</code></p>
+
+<p><strong>註：不要忘了加執行權限</strong></p>
+
+<h1 id="init-設定:f370d75d42e29bc27188dc29fb29e84e">init 設定</h1>
+
+<p>為了簡便，第二個 docker 會使用 loop devicemapper。</p>
+
+<h2 id="systemd:f370d75d42e29bc27188dc29fb29e84e">systemd</h2>
+
+<p>先把 <code>/lib/systemd/system/docker.socket</code> 和 <code>/lib/systemd/system/docker.service</code> 複製一份到 <code>/etc/systemd/system</code>，然後把複本檔名裡的 <code>docker</code> 改成 <code>docker2</code>。</p>
+
+<p><code>docker2.socket</code> 要改的地方有兩個： (說明部份也可以視需要更改)</p>
+
+<ul>
+<li>PartOf: 把 <code>docker</code> 改成 <code>docker2</code><br /></li>
+<li>ListenStream: 改成 <code>/docket2/docker.sock</code><br />
+<br /></li>
+</ul>
+
+<p><code>docker2.service</code> 要改的有三個: (說明部份也可以視需要更改)</p>
+
+<ul>
+<li>After: 把 <code>docker</code> 改成 <code>docker2</code><br /></li>
+<li>Requires: 把 <code>docker</code> 改成 <code>docker2</code><br /></li>
+<li>ExecStart: 改成 <code>/usr/bin/docker daemon -H fd:// -g /docker2/graph -s devicemapper -p /docker2/docker.pid -b docker1</code>。視需要加上其他參數，比如 <code>--dns</code> 或 <code>--insecure-registry</code> 等等<br />
+<br /></li>
+</ul>
+
+<p>啟動試試</p>
+
+<pre><code class="language-sh">systemctl daemon-reload
+systemctl start docker2
+docker2 info
+</code></pre>
+
+<p>正常的話就可以設為預設啟動了</p>
+
+<pre><code class="language-sh">systemctl enable docker2
+</code></pre>
+
+<h1 id="建立-gitlab-ci-runner:f370d75d42e29bc27188dc29fb29e84e">建立 gitlab-ci runner</h1>
+
+<pre><code class="language-sh">docker run -d --name runner1 --hostname runner1 -v /docker2/docker.sock:/var/run/docker.sock --privileged --restart always gitlab/gitlab-runner
+docker exec -it runner1 gitlab-runner register -n -r &quot;gitlab-runner-register-token&quot; --url &quot;http://your.gitlab.url/ci&quot; --executor docker --docker-image gitlab/dind --docker-privileged --name runner1 --docker-volumes /var/run/docker.sock:/var/run/docker.sock
+</code></pre>
+
+<p>說明一下 gitlab-runner register 的參數</p>
+
+<ul>
+<li><code>-r</code>: register token<br /></li>
+<li><code>--url</code>: GitLab 本體提供的 API 位址，如果本體跟 runner 跑在同一台機器的 docker 裡的話，建立 runner container 的時候可能要用 <code>--link</code> 連起來<br /></li>
+<li><code>--executor</code>: 指定 job executor<br /></li>
+<li><code>--docker-image</code>: 預設用來執行 job 的 image<br /></li>
+<li><code>--docker-privileged</code>: 不加這個就不能存取外部的 docker 了<br /></li>
+<li><code>--docker-volumes</code>: 把 runner 裡的 docker socket 掛進 job container 裡。由於在建立 runner container 的時候我們把第二個 docker 的 socket 指定給 runner 了，所以 job container 存取到的會是第二個 docker<br />
+<br /></li>
+</ul>
+
+<h1 id="完成:f370d75d42e29bc27188dc29fb29e84e">完成</h1>
+
+<p>指定一個 build job 給新的 runner，應該就可以用 <code>docker2 ps -a</code> 和 <code>docker2 images</code> 看到 job container 及相關資訊。</p>
 </div></article>
 					
 						<div class="share">

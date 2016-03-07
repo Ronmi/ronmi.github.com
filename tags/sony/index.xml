@@ -28,7 +28,8 @@
 &lt;li&gt;&lt;a href=&#34;http://www.flashtool.net/index.php&#34;&gt;Flashtool&lt;/a&gt;&lt;br /&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;http://forum.xda-developers.com/crossdevice-dev/sony/tool-prfcreator-easily-create-pre-t2859904&#34;&gt;PRFCreator&lt;/a&gt;&lt;br /&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;http://nut.xperia-files.com/&#34;&gt;XZlockeddualrecovery&lt;/a&gt; installer 跟 flashable 兩個版本都要下載&lt;br /&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://download.chainfire.eu/696/SuperSU&#34;&gt;SuperSU&lt;/a&gt;&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://download.chainfire.eu/696/SuperSU&#34;&gt;SuperSU&lt;/a&gt;&lt;br /&gt;
+&lt;br /&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;h2 id=&#34;synopsis:2f643943f70f9c01d7e42e97920cdc40&#34;&gt;Synopsis&lt;/h2&gt;
@@ -43,7 +44,8 @@
 &lt;li&gt;用 flashtool 刷舊版 ftf&lt;br /&gt;&lt;/li&gt;
 &lt;li&gt;用 installer 安裝 recovery&lt;br /&gt;&lt;/li&gt;
 &lt;li&gt;flash zip、清 delvik 快取、poweroff&lt;br /&gt;&lt;/li&gt;
-&lt;li&gt;用 flashtool 刷新版 ftf (需避開 system, partition 跟 TA)&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;用 flashtool 刷新版 ftf (需避開 system, partition 跟 TA)&lt;br /&gt;
+&lt;br /&gt;&lt;/li&gt;
 &lt;/ol&gt;
 
 &lt;h2 id=&#34;tips:2f643943f70f9c01d7e42e97920cdc40&#34;&gt;Tips&lt;/h2&gt;

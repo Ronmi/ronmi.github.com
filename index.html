@@ -77,6 +77,14 @@
     <span style="cursor:pointer" onclick="$(this).find('~div').slideToggle('slow');return false">Categories</span>
     <div class="taxonomy">
       
+      <div><a href="https://ronmi.github.io//categories/docker">
+	  docker
+      </a></div>
+      
+      <div><a href="https://ronmi.github.io//categories/gitlab">
+	  gitlab
+      </a></div>
+      
       <div><a href="https://ronmi.github.io//categories/go">
 	  go
       </a></div>
@@ -91,6 +99,14 @@
   <li>
     <span style="cursor:pointer" onclick="$(this).find('~div').slideToggle('slow');return false">Tags</span>
     <div class="taxonomy">
+      
+      <div><a href="https://ronmi.github.io//tags/docker">
+	  docker
+      </a></div>
+      
+      <div><a href="https://ronmi.github.io//tags/gitlab">
+	  gitlab
+      </a></div>
       
       <div><a href="https://ronmi.github.io//tags/go">
 	  go
@@ -158,6 +174,44 @@
 					
 					<div itemscope itemtype="http://schema.org/Blog">
 					
+				        <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+    <div class="meta">
+		<div class="date"><time datetime='Mon, Mar 7, 2016' data-updated="true" itemprop="datePublished">Mon, Mar 7, 2016</time>
+</div>
+		<div class="tags">
+
+
+	
+	
+		<a href="https://ronmi.github.io//categories/docker"> docker </a>,
+	
+
+	
+	
+	    <a href="https://ronmi.github.io//categories/gitlab"> gitlab </a>
+	
+
+
+</div>
+		
+			<span class="comments"><a href="https://ronmi.github.io/post/docker/gitlab-ci-docker/#disqus_thread">Comments</a></span>
+		
+	</div>
+	<h1 class="title" itemprop="name"><a href="https://ronmi.github.io/post/docker/gitlab-ci-docker/" itemprop="url">gitlab-ci and docker</a></h1>
+	<div class="entry-content" itemprop="articleBody">
+		<p>最近在學 CI/CD 相關的課題，研究了一下 Jenkins 但是覺得太過肥大。GitLab 本體雖然也是肥肥的 ruby，不過 gitlab-ci 預設的 gitlab-multirunner 到是 go 寫的，相當輕量；能與 GitLab 深度整合這點也還不錯。</p>
+
+<p>gitlab-multirunner 支援 docker。由於我的 GitLab 本體和 ci 都是裝在 docker 裡面的。為了要在 build job 中做 docker build，所以一開始考慮用 docker-in-docker (dind)。不過 dind 有效能和 cgroup namespace 等等問題，所以後來改成將外部 docker socket 掛入 container 入的方式。這衍生了另一個問題：gitlab-multirunner 會針對每一個 job 下載必要的 image、開啟複數個 container，讓外部的 docker 看起來十分複雜，造成管理的困難。</p>
+
+<p>這篇記錄了我的另一個解法：啟動另一個獨立的 docker daemon 專供 build/test/deploy job 使用。</p>
+
+<p><strong>註：以下適用 docker 1.10 以後的版本，舊版「理論上可以」，但我沒有測試，不保證能通用</strong></p>
+
+		<a href="https://ronmi.github.io/post/docker/gitlab-ci-docker/" class="more-link">Read on →</a>
+	</div>
+</article>
+
+				    
 				        <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
     <div class="meta">
 		<div class="date"><time datetime='Thu, Sep 17, 2015' data-updated="true" itemprop="datePublished">Thu, Sep 17, 2015</time>
@@ -280,7 +334,7 @@
 					</nav>
 				</div>
 			</div>
-			<footer id="footer" class="inner">Copyright &copy; 2015
+			<footer id="footer" class="inner">Copyright &copy; 2016
 
     Ronmi Ren
 
