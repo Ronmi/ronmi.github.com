@@ -1,0 +1,640 @@
+<!DOCTYPE HTML>
+
+<html lang="zh-tw">
+
+<head>
+	<meta charset="utf-8">
+	<title>The Laws of Reflection 中譯 - 程式、雜談</title>
+	<meta name="author" content="map[name:Ronmi Ren email:ronmi.ren@gmail.com]">
+
+	
+	
+	<meta name="description" content="">
+	
+
+	
+	<meta name="HandheldFriendly" content="True">
+	<meta name="MobileOptimized" content="320">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    
+	<link href='/index.xml' rel="alternate" title="程式、雜談" type="application/atom+xml">
+	
+	<link rel="canonical" href="https://ronmi.github.io/post/go/the-laws-of-reflection/">
+	<link href="https://ronmi.github.io//favicon.png" rel="shortcut icon">
+	<link href="https://ronmi.github.io//css/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<link href="https://ronmi.github.io//css/font-awesome.min.css" media="screen, projection" rel="stylesheet" type="text/css">
+	
+	<link href='http://fonts.googleapis.com/css?family=Nunito:400,300,700' rel='stylesheet' type='text/css'>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	
+  
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-67749030-1']);
+		_gaq.push(['_trackPageview']);
+
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+
+	<link href="https://ronmi.github.io//css/prism.css" rel="stylesheet" type="text/css">
+	<link href="https://ronmi.github.io//css/ronmi.css" media="screen, projection" rel="stylesheet" type="text/css">
+</head>
+
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+			<header id="header" class="inner"><div class="profilepic">
+	
+	
+	<script src="https://ronmi.github.io//js/md5.js"></script>
+	<script type="text/javascript">
+		$(function(){
+			$('.profilepic').append("<img src='http://www.gravatar.com/avatar/" + MD5('ronmi.ren@gmail.com') + "?s=160' alt='Profile Picture' style='width: 160px;' />");
+		});
+	</script>
+	
+	
+</div>
+
+<nav id="main-nav">
+<ul class="main">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/about/">About</a></li>
+  <li><a href="/post/">Archives</a></li>
+</ul>
+
+<ul class="main">
+  
+  
+  <li>
+    <span style="cursor:pointer" onclick="$(this).find('~div').slideToggle('slow');return false">Categories</span>
+    <div class="taxonomy">
+      
+      <div><a href="https://ronmi.github.io//categories/docker">
+	  docker
+      </a></div>
+      
+      <div><a href="https://ronmi.github.io//categories/gitlab">
+	  gitlab
+      </a></div>
+      
+      <div><a href="https://ronmi.github.io//categories/go">
+	  go
+      </a></div>
+      
+      <div><a href="https://ronmi.github.io//categories/sony">
+	  sony
+      </a></div>
+      
+      <div><a href="https://ronmi.github.io//categories/translate">
+	  translate
+      </a></div>
+      
+    </div>
+  </li>
+  
+  <li>
+    <span style="cursor:pointer" onclick="$(this).find('~div').slideToggle('slow');return false">Tags</span>
+    <div class="taxonomy">
+      
+      <div><a href="https://ronmi.github.io//tags/docker">
+	  docker
+      </a></div>
+      
+      <div><a href="https://ronmi.github.io//tags/gitlab">
+	  gitlab
+      </a></div>
+      
+      <div><a href="https://ronmi.github.io//tags/go">
+	  go
+      </a></div>
+      
+      <div><a href="https://ronmi.github.io//tags/root">
+	  root
+      </a></div>
+      
+      <div><a href="https://ronmi.github.io//tags/sony">
+	  sony
+      </a></div>
+      
+      <div><a href="https://ronmi.github.io//tags/translate">
+	  translate
+      </a></div>
+      
+    </div>
+  </li>
+  
+</ul>
+
+<section class="aboutme">
+  <p>
+    技術、閒話、簡單記錄
+  </p>
+</section>
+
+</nav>
+<nav id="sub-nav">
+	<div class="social">
+		
+			<a class="email" href='mailto:ronmi.ren@gmail.com' title="Email">Email</a>
+		
+		
+			<a class="facebook" href='http://www.facebook.com/ronmi.ren' title="Facebook">Facebook</a>
+		
+		
+			<a class="google" href='https://plus.google.com/RonmiRen' rel="author" title="Google+">Google+</a>
+		
+		
+			<a class="twitter" href='http://twitter.com/redmonam' title="Twitter">Twitter</a>
+		
+		
+			<a class="github" href='https://github.com/Ronmi' title="GitHub">GitHub</a>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+    	
+    	
+			<a class="rss" href='/index.xml' title="RSS">RSS</a>
+		
+	</div>
+</nav>
+</header>
+			</div>
+		</div>
+		<div class="mid-col">
+			
+			<div class="mid-col-container">
+				<div id="content" class="inner">
+					<div itemscope itemtype="http://schema.org/Blog">
+					<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+    <h1 class="title" itemprop="name">The Laws of Reflection 中譯</h1>
+	<div class="entry-content" itemprop="articleBody">
+
+<h1 id="權利聲明:d812e636372e45f142facfa0108f3bb6">權利聲明</h1>
+
+<h3 id="原文:d812e636372e45f142facfa0108f3bb6">原文</h3>
+
+<p>原作者：Rob Pike</p>
+
+<p>原文位於 <a href="https://blog.golang.org/laws-of-reflection">https://blog.golang.org/laws-of-reflection</a>，依 CC BY 3.0 及 BSD 授權，相關權利非屬改譯者所有，詳見原文最末之權利宣告部份。</p>
+
+<h3 id="改譯:d812e636372e45f142facfa0108f3bb6">改譯</h3>
+
+<p>改譯者：任仲平 Ronmi Ren</p>
+
+<p>本文相關權利屬改譯者所有。除中譯外，為求通順易讀，略有改動，與原文不盡相同。本文以 CC BY 3.0 TW 公開授權，惟程式碼部份除中譯外皆由原文抄錄而來，故依原授權條款授權。</p>
+
+<h1 id="介紹:d812e636372e45f142facfa0108f3bb6">介紹</h1>
+
+<p>「反射」一詞，在程式設計領域中，特指程式藉由型別系統來偵測、驗證自身結構的能力，是 metaprogramming 的一種。它也非常容易讓人搞混。</p>
+
+<p>不同程式語言中，對於「反射」的定義和實行方式不盡相同。本篇文章旨在解釋 Go 中的反射機制，不應與其他語言混為一談。</p>
+
+<h1 id="型別與介面:d812e636372e45f142facfa0108f3bb6">型別與介面</h1>
+
+<p>既然反射機制是基於型別系統而來的，我們就從 Go 的型別系統講起。</p>
+
+<p>Go 是靜態型別的語言：任何變數都有自己的靜態型別。靜態型別是指在編譯時，一個變數必定是某個已知的型別，而且不會臨時改變。比如</p>
+
+<pre><code class="language-go">type MyInt int
+
+var i int
+var j MyInt
+</code></pre>
+
+<p><code>i</code> 是 <code>int</code> 型別而 <code>j</code> 則是 <code>MyInt</code> 型別。雖然 <code>i</code> 和 <code>j</code> 終究都是整數 (本質型別都是 <code>int</code>)，但它們的靜態型別分別是 <code>int</code> 和 <code>MyInt</code>，對於編譯器而言是完全不同的型別，所以必須強制轉型才能把值指定給另一個 (如 <code>i = int(j)</code>)。</p>
+
+<p>介面型別則是特定方法的集合。如果你把變數宣告成某個介面型別，它將可以儲存任意實值 (concrete value，這裡指的是「不是介面型別的值」)，只要那個實值有完整實作介面指定的方法。常見的例子就是 <code>io.Reader</code> 和 <code>io.Writer</code></p>
+
+<pre><code class="language-go">// Reader is the interface that wraps the basic Read method.
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+// Writer is the interface that wraps the basic Write method.
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+</code></pre>
+
+<p>任何型別只要有一樣的 <code>Read</code> 方法，就稱之為「實作了 <code>io.Reader</code>」型別；<code>io.Writer</code> 亦同。所以如果把變數宣告成 <code>io.Reader</code> 型別，這個變數就能儲存各種有 <code>Read</code> 方法的實值。</p>
+
+<pre><code class="language-go">var r io.Reader
+r = os.Stdin
+r = bufio.NewReader(r)
+r = new(bytes.Buffer)
+// and so on
+</code></pre>
+
+<p>要特別注意一點：雖然上面 <code>r</code> 的值一再更動，但它的型別始終是 <code>io.Reader</code>。</p>
+
+<p>空介面是更重要的例子</p>
+
+<pre><code class="language-go">interface{}
+</code></pre>
+
+<p>空介面沒有必要的方法，也就是說任何實值都實作了空介面。</p>
+
+<p>千萬不要誤會介面是動態型別：上面 <code>r</code> 裡儲存的實值雖然各種型別都有，但它們都必須實作 <code>io.Reader</code> 介面，所以 <code>r</code> 的型別始終會是 <code>io.Reader</code>。</p>
+
+<p>我們一再強調這些，是因為反射跟介面是息息相關的。</p>
+
+<h1 id="深入介面型別:d812e636372e45f142facfa0108f3bb6">深入介面型別</h1>
+
+<p>Russ Cos 寫了一篇<a href="http://research.swtch.com/2009/12/go-data-structures-interfaces.html">詳細的文章</a>介紹 Go 的介面型別。本節只提其精要。</p>
+
+<p>宣告為介面型別的變數其實儲存了兩個值：指定給它的實值，以及該實值真正的型別。</p>
+
+<pre><code class="language-go">var r io.Reader
+tty, err := os.OpenFile(&quot;/dev/tty&quot;, os.O_RDWR, 0)
+if err != nil {
+    return nil, err
+}
+r = tty
+</code></pre>
+
+<p><code>r</code> 可以說是儲存了 <code>(tty, *os.File)</code>。由於 <code>r</code> 是 <code>io.Reader</code> 型別，我們透過 <code>r</code> 只能存取 <code>Read</code> 方法；但 <code>r</code> 也紀錄了實值的真正型別 <code>*os.File</code>，所以我們才能這樣</p>
+
+<pre><code class="language-go">var w io.Writer
+w = r.(io.Writer)
+</code></pre>
+
+<p>這就是所謂的型別斷言 (type assertion)；這代表 <code>r</code> 裡的實值 (<code>tty</code>) 同時也實作了 <code>io.Writer</code> 介面，所以才能指定給 <code>io.Writer</code> 型別的變數。現在 <code>w</code> 儲存了 <code>(tty, *os.File)</code> 了，恰好跟 <code>r</code> 存的一樣。雖然實值提供了更多方法，但變數的型別 (<code>io.Reader</code>, <code>io.Writer</code>) 限制了這個變數可以使用的方法。</p>
+
+<p>再來，我們也可以</p>
+
+<pre><code class="language-go">var empty interface{}
+empty = w
+</code></pre>
+
+<p>現在 <code>empty</code> 也是 <code>(tty, *os.File)</code> 了。你可以把任何實值指定給空介面的變數，而它也會老老實實地把一切儲存起來。</p>
+
+<p>上面我們並沒有使用型別斷言，因為任何值都必然實作空介面。而在指定給 <code>w</code> 的時候，有實作 <code>io.Reader</code> 的實值不一定會實作 <code>io.Writer</code>，所以需要型別斷言。</p>
+
+<p>另外一個重要的點是：介面變數儲存的是 (實值, 實值的型別) 而非 (實值, 介面的型別)。介面變數只能存實值。</p>
+
+<p>現在可以來談反射了。</p>
+
+<h1 id="反射第一法則:d812e636372e45f142facfa0108f3bb6">反射第一法則</h1>
+
+<h2 id="1-反射可以把介面變數轉成對應的反射物件:d812e636372e45f142facfa0108f3bb6">1. 反射可以把介面變數轉成對應的反射物件</h2>
+
+<p>基本上，反射就是去驗證介面變數裡的東西 <code>(實值, 實值的型別)</code>。讓我們從 <code>reflect.Type</code> 和 <code>reflect.Value</code> 開始。這兩個型別讓我們可以存取介面變數裡儲存的兩個東西。<code>reflect.ValueOf</code> 跟 <code>reflect.TypeOf</code> 可以把介面變數裡儲存的實值和型別轉成 <code>reflect.Value</code> 和 <code>reflect.Type</code> 傳出來。(雖然從 <code>reflect.Value</code> 也能取得 <code>reflect.Type</code>，不過我們先略過不提)</p>
+
+<p>我們從 <code>reflect.TypeOf</code> 開始：</p>
+
+<pre><code class="language-go">package main
+
+import (
+    &quot;fmt&quot;
+    &quot;reflect&quot;
+)
+
+func main() {
+    var x float64 = 3.4
+    fmt.Println(&quot;type:&quot;, reflect.TypeOf(x))
+}
+</code></pre>
+
+<p>執行結果是</p>
+
+<pre><code>type: float64
+</code></pre>
+
+<p>你也許會懷疑介面在哪，程式裡只看到 <code>float64</code> 而已啊？不過來看看 <a href="http://golang.org/pkg/reflect/#TypeOf">godoc</a>，<code>reflect.TypeOf</code> 接受的參數是空介面型別的：</p>
+
+<pre><code>// TypeOf returns the reflection Type of the value in the interface{}.
+func TypeOf(i interface{}) Type
+</code></pre>
+
+<p>當執行 <code>reflect.TypeOf(x)</code> 的時候，<code>x</code> 會先存到一個暫時的空介面變數裡，也就是參數；<code>reflect.TypeOf</code> 再從這個空介面變數中提取型別資訊。</p>
+
+<p><code>reflect.ValueOf</code> 當然是提取實值出來</p>
+
+<pre><code class="language-go">var x float64 = 3.4
+fmt.Println(&quot;value:&quot;, reflect.ValueOf(x))
+</code></pre>
+
+<p>結果是</p>
+
+<pre><code>value: &lt;float64 Value&gt;
+</code></pre>
+
+<p><code>reflect.Type</code> 和 <code>reflect.Value</code> 都有許多方法可以幫助我們驗證和處理。<code>reflect.Value</code> 有個 <code>Type</code> 方法可以取得 <code>reflect.Value</code> 代表的實值的型別。而 <code>reflect.Type</code> 和 <code>reflect.Value</code> 都有 <code>Kind</code> 方法可以偵測實值的種類：<code>Uint</code>，<code>Float64</code>，<code>Slice</code> 等等。<code>reflect.Value</code> 也有些方法可以把真正的值取出來：</p>
+
+<pre><code class="language-go">var x float64 = 3.4
+v := reflect.ValueOf(x)
+fmt.Println(&quot;type:&quot;, v.Type())
+fmt.Println(&quot;kind is float64:&quot;, v.Kind() == reflect.Float64)
+fmt.Println(&quot;value:&quot;, v.Float())
+</code></pre>
+
+<p>結果是</p>
+
+<pre><code>type: float64
+kind is float64: true
+value: 3.4
+</code></pre>
+
+<p>此外也有可以賦值的方法，但這要等到介紹第三法則的時候才會提到。</p>
+
+<p>為了簡化反射機制，取值和賦值的方法都只保留最大的型別 (比如取得任何整數實值都是用 <code>Int</code> 方法，而它會回傳 <code>int64</code>)，所以你得自己轉型：</p>
+
+<pre><code class="language-go">var x uint8 = 'x'
+v := reflect.ValueOf(x)
+fmt.Println(&quot;type:&quot;, v.Type())                            // uint8.
+fmt.Println(&quot;kind is uint8: &quot;, v.Kind() == reflect.Uint8) // true.
+x = uint8(v.Uint())                                       // v.Uint returns a uint64.
+</code></pre>
+
+<p>而 <code>Kind</code> 方法偵測的是本質型別，而非靜態型別：</p>
+
+<pre><code class="language-go">type MyInt int
+var x MyInt = 7
+v := reflect.ValueOf(x)
+</code></pre>
+
+<p><code>v.Kind()</code> 依然是 <code>reflect.Int</code> 而非 <code>MyInt</code>。換句話說，<code>Kind</code> 無法分辨 <code>MyInt</code> 和 <code>int</code>，但 <code>Type</code> 可以。</p>
+
+<h1 id="反射第二法則:d812e636372e45f142facfa0108f3bb6">反射第二法則</h1>
+
+<h2 id="2-反射可以把反射物件轉成介面變數:d812e636372e45f142facfa0108f3bb6">2. 反射可以把反射物件轉成介面變數</h2>
+
+<p>既然是反射，自然也能反過來用。</p>
+
+<p><code>reflect.Value</code> 提供了 <code>Interface</code> 方法把代表的實值重新包成介面變數</p>
+
+<pre><code class="language-go">// Interface returns v's value as an interface{}.
+func (v Value) Interface() interface{}
+</code></pre>
+
+<p>接續前一節的程式，我們可以</p>
+
+<pre><code class="language-go">y := v.Interface().(float64) // y will have type float64.
+fmt.Println(y)
+</code></pre>
+
+<p>來印出實值。</p>
+
+<p>更棒的是，因為 <code>fmt.Println</code> 和 <code>fmt.Printf</code> 等都接受空介面的參數 (<code>fmt</code> 套件會從這個介面參數取得正確的實值和型別來處理)，所以要印出實值還可以更簡單</p>
+
+<pre><code class="language-go">fmt.Println(v.Interface())
+</code></pre>
+
+<p>(因為 <code>v</code> 的型別是 <code>reflect.Type</code> 而非真正的實值 <code>float64</code>，所以這裡不可以用 <code>fmt.Println(v)</code>) 既然實值是 <code>float64</code> 型別，我們還可以指定浮點數專用的格式：</p>
+
+<pre><code class="language-go">fmt.Printf(&quot;value is %7.1e\n&quot;, v.Interface())
+</code></pre>
+
+<p>結果是</p>
+
+<pre><code>3.4e+00
+</code></pre>
+
+<p>再提一次，我們不需要做型別斷言，<code>Printf</code> 可以從介面變數取得正確的型別來處理它。</p>
+
+<p>簡單來說，<code>Interface</code> 方法就是 <code>refelct.ValueOf</code> 的相反，只是它回傳的是空介面變數。</p>
+
+<p>總而言之，反射可以在介面變數和反射物件間彼此轉換。</p>
+
+<h1 id="反射第三法則:d812e636372e45f142facfa0108f3bb6">反射第三法則</h1>
+
+<h2 id="3-想賦值的話-反射物件必需是可賦值的:d812e636372e45f142facfa0108f3bb6">3. 想賦值的話，反射物件必需是可賦值的</h2>
+
+<p>第三法則是最容易混淆的，不過從頭說起其實很簡單。</p>
+
+<p>以下程式碼是錯誤的，但非常值得研究一番：</p>
+
+<pre><code class="language-go">var x float64 = 3.4
+v := reflect.ValueOf(x)
+v.SetFloat(7.1) // Error: will panic.
+</code></pre>
+
+<p>執行這些程式會噴錯</p>
+
+<pre><code>panic: reflect.Value.SetFloat using unaddressable value
+</code></pre>
+
+<p>問題不是 <code>7.1</code> 無法定位 (unaddressable)，而是 <code>v</code> 不可賦值。不是每個 <code>reflect.Value</code> 都可賦值的。</p>
+
+<p>你可以用 <code>CanSet</code> 方法來偵測可賦值性</p>
+
+<pre><code class="language-go">var x float64 = 3.4
+v := reflect.ValueOf(x)
+fmt.Println(&quot;settability of v:&quot;, v.CanSet())
+</code></pre>
+
+<p>結果是</p>
+
+<pre><code>settability of v: false
+</code></pre>
+
+<p>對不可賦值的 <code>Value</code> 呼叫 <code>Set</code> 系列方法就會噴這種錯誤。</p>
+
+<p>可賦值性有點像是變數定位問題，但更狹義。它定義了一個反射物件是否可以修改它代表的實值。如果反射物件代表的是實值的本體而非副本，那反射物件就是可賦值的。</p>
+
+<pre><code class="language-go">var x float64 = 3.4
+v := reflect.ValueOf(x)
+</code></pre>
+
+<p>由於參數傳遞的是副本，所以 <code>v</code> 代表的其實不是真正的 <code>x</code>，而是 <code>x</code> 的副本，所以</p>
+
+<pre><code class="language-go">v.SetFloat(7.1)
+</code></pre>
+
+<p>必須噴錯，否則只有 <code>x</code> 的副本的值會改變，<code>x</code> 仍然會是 <code>3.4</code>。這顯然並非我們的原意，也會造成許多困擾。</p>
+
+<p>如果你覺得這很詭異，想想一般的函式</p>
+
+<pre><code class="language-go">f(x)
+</code></pre>
+
+<p>在 <code>f</code> 裡更改 <code>x</code> 的值不應該影響真正的 <code>x</code>，<code>f</code> 接收到的是 <code>x</code> 的副本。如果想要在 <code>f</code> 裡影響真正的 <code>x</code>，應該要</p>
+
+<pre><code class="language-go">f(&amp;x)
+</code></pre>
+
+<p>這應該比較好理解，而這正是反射的工作方式。如果想對某 <code>Value</code> 賦值，就要用指標來建立 <code>Value</code>。那麼我們來試看看</p>
+
+<pre><code class="language-go">var x float64 = 3.4
+p := reflect.ValueOf(&amp;x) // Note: take the address of x.
+fmt.Println(&quot;type of p:&quot;, p.Type())
+fmt.Println(&quot;settability of p:&quot;, p.CanSet())
+</code></pre>
+
+<p>結果是</p>
+
+<pre><code>type of p: *float64
+settability of p: false
+</code></pre>
+
+<p>之所以 <code>p</code> 不可賦值，是因為 <code>p</code> 代表的是 <code>&amp;x</code>，而我們想修改的是 <code>x</code>，這可以用 <code>Elem</code> 方法取得</p>
+
+<pre><code class="language-go">v := p.Elem()
+fmt.Println(&quot;settability of v:&quot;, v.CanSet())
+</code></pre>
+
+<p>現在 <code>v</code> 就是可賦值的了</p>
+
+<pre><code>settability of v: true
+</code></pre>
+
+<p>而且 <code>v</code> 代表的是 <code>x</code>，所以我們可以</p>
+
+<pre><code class="language-go">v.SetFloat(7.1)
+fmt.Println(v.Interface())
+fmt.Println(x)
+</code></pre>
+
+<p>結果當然是</p>
+
+<pre><code>7.1
+7.1
+</code></pre>
+
+<p>反射可能不太好理解，但它十分忠實地反映了 Go 的工作模式。簡單來說，要用指標建麼的 <code>Value</code> 才可賦值。</p>
+
+<h1 id="struct:d812e636372e45f142facfa0108f3bb6">Struct</h1>
+
+<p>在前一節，<code>v</code> 本身不是指標，它只從某個指標轉化而來的。當你想修改某個 <code>struct</code> 的成員時就會用到這點：既然你能取得 <code>struct</code> 的位址，當然也可以修改它的成員。</p>
+
+<p>以下範例分析某個 <code>struct</code> 變數 <code>t</code>。我們先用指標建立 <code>Value</code>，因為等下會去修改 <code>t</code> 的成員。然後把 <code>t</code> 的型別儲存到 <code>typeOfT</code> 裡，再呼叫一些相關的方法列舉出 <code>t</code> 的成員。要注意雖然我們是從 <code>struct</code> 的型別取得成員名稱，但成員的值本身仍然是 <code>Value</code>。</p>
+
+<pre><code class="language-go">type T struct {
+    A int
+    B string
+}
+t := T{23, &quot;skidoo&quot;}
+s := reflect.ValueOf(&amp;t).Elem()
+typeOfT := s.Type()
+for i := 0; i &lt; s.NumField(); i++ {
+    f := s.Field(i)
+    fmt.Printf(&quot;%d: %s %s = %v\n&quot;, i,
+        typeOfT.Field(i).Name, f.Type(), f.Interface())
+}
+</code></pre>
+
+<p>結果是</p>
+
+<pre><code>0: A int = 23
+1: B string = skidoo
+</code></pre>
+
+<p>有個重點剛剛沒有提到：<code>T</code> 型別的所有成員都是大寫開頭的，因為只有公開成員才是可賦值的。</p>
+
+<p>既然 <code>s 是可賦值的，我們當然可以用</code>s<code>來修改</code>t` 的 (可賦值的) 成員</p>
+
+<pre><code class="language-go">s.Field(0).SetInt(77)
+s.Field(1).SetString(&quot;Sunset Strip&quot;)
+fmt.Println(&quot;t is now&quot;, t)
+</code></pre>
+
+<p>結果是</p>
+
+<pre><code>t is now {77 Sunset Strip}
+</code></pre>
+
+<p>如果 <code>s</code> 是用 <code>t</code> 建立的，那 <code>SetInt</code> 跟 <code>SetString</code> 就會噴錯了。</p>
+
+<h1 id="結論:d812e636372e45f142facfa0108f3bb6">結論</h1>
+
+<p>再說一次反射三大法則</p>
+
+<ol>
+<li>反射可以把介面變數轉成對應的反射物件<br /></li>
+<li>反射可以把反射物件轉成介面變數<br /></li>
+<li>想賦值的話，反射物件必需是可賦值的<br />
+<br /></li>
+</ol>
+
+<p>只要理解了這三大法則，反射雖然還是有點複雜，但會變得很好用了。反射機制極為強大，所以要小心使用，不到萬不得已最好別用。</p>
+
+<p>還有很多反射相關的議題我們沒有討論到：傳送或接收 <code>channel</code> 的資料、配置變數、<code>slice</code> 和 <code>map</code> 的操作、呼叫函式及方法等，不過篇幅已經夠長了。我們會再後續的文章裡再探討一些相關的議題。</p>
+
+<p>原作者：Rob Pike<br />
+改譯者：Ronmi Ren</p>
+</div></article>
+					
+						<div class="share">
+	<div class="addthis_toolbox addthis_default_style ">
+	
+	<a class="addthis_button_facebook_like" fb:like:layout="button_count"></a>
+	
+	
+	<a class="addthis_button_tweet"></a>
+	
+	
+	<a class="addthis_button_google_plusone" g:plusone:size=''></a>
+	
+	
+	</div>
+	
+  	<script type="text/javascript" src='http://s7.addthis.com/js/250/addthis_widget.js#pubid='></script>
+  	
+</div>
+
+					
+					
+					<section id="comment">
+					    <h1 class="title">Comments</h1>
+					    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+					</section>
+					
+					
+
+<script type="text/javascript">
+    
+    var disqus_shortname = 'ronmi';
+
+    
+    
+
+    
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+    
+</script>
+
+
+				    </div>
+				</div>
+			</div>
+			<footer id="footer" class="inner">Copyright &copy; 2016
+
+    Ronmi Ren
+
+Design credit: <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank Mehta</a>
+<script src="https://ronmi.github.io//js/slash.js"></script>
+<script src="https://ronmi.github.io//js/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+	$('.fancybox').fancybox();
+	$('pre>code').each(function(i,e){ $(e).addClass('line-numbers')});
+})(jQuery);
+</script>
+<script src="https://ronmi.github.io//js/prism.js"></script>
+
+</footer>
+		</div>
+	</div>
+	
+</body>
+</html>

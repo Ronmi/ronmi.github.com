@@ -7,7 +7,401 @@
     <language>zh-tw</language>
     <author>Ronmi Ren</author>
     
-    <updated>Wed, 16 Sep 2015 14:26:42 CST</updated>
+    <updated>Wed, 15 Jun 2016 09:04:18 CST</updated>
+    
+    <item>
+      <title>The Laws of Reflection 中譯</title>
+      <link>https://ronmi.github.io/post/go/the-laws-of-reflection/</link>
+      <pubDate>Wed, 15 Jun 2016 09:04:18 CST</pubDate>
+      <author>Ronmi Ren</author>
+      <guid>https://ronmi.github.io/post/go/the-laws-of-reflection/</guid>
+      <description>
+
+&lt;h1 id=&#34;權利聲明:d812e636372e45f142facfa0108f3bb6&#34;&gt;權利聲明&lt;/h1&gt;
+
+&lt;h3 id=&#34;原文:d812e636372e45f142facfa0108f3bb6&#34;&gt;原文&lt;/h3&gt;
+
+&lt;p&gt;原作者：Rob Pike&lt;/p&gt;
+
+&lt;p&gt;原文位於 &lt;a href=&#34;https://blog.golang.org/laws-of-reflection&#34;&gt;https://blog.golang.org/laws-of-reflection&lt;/a&gt;，依 CC BY 3.0 及 BSD 授權，相關權利非屬改譯者所有，詳見原文最末之權利宣告部份。&lt;/p&gt;
+
+&lt;h3 id=&#34;改譯:d812e636372e45f142facfa0108f3bb6&#34;&gt;改譯&lt;/h3&gt;
+
+&lt;p&gt;改譯者：任仲平 Ronmi Ren&lt;/p&gt;
+
+&lt;p&gt;本文相關權利屬改譯者所有。除中譯外，為求通順易讀，略有改動，與原文不盡相同。本文以 CC BY 3.0 TW 公開授權，惟程式碼部份除中譯外皆由原文抄錄而來，故依原授權條款授權。&lt;/p&gt;
+
+&lt;h1 id=&#34;介紹:d812e636372e45f142facfa0108f3bb6&#34;&gt;介紹&lt;/h1&gt;
+
+&lt;p&gt;「反射」一詞，在程式設計領域中，特指程式藉由型別系統來偵測、驗證自身結構的能力，是 metaprogramming 的一種。它也非常容易讓人搞混。&lt;/p&gt;
+
+&lt;p&gt;不同程式語言中，對於「反射」的定義和實行方式不盡相同。本篇文章旨在解釋 Go 中的反射機制，不應與其他語言混為一談。&lt;/p&gt;
+
+&lt;h1 id=&#34;型別與介面:d812e636372e45f142facfa0108f3bb6&#34;&gt;型別與介面&lt;/h1&gt;
+
+&lt;p&gt;既然反射機制是基於型別系統而來的，我們就從 Go 的型別系統講起。&lt;/p&gt;
+
+&lt;p&gt;Go 是靜態型別的語言：任何變數都有自己的靜態型別。靜態型別是指在編譯時，一個變數必定是某個已知的型別，而且不會臨時改變。比如&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;type MyInt int
+
+var i int
+var j MyInt
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;i&lt;/code&gt; 是 &lt;code&gt;int&lt;/code&gt; 型別而 &lt;code&gt;j&lt;/code&gt; 則是 &lt;code&gt;MyInt&lt;/code&gt; 型別。雖然 &lt;code&gt;i&lt;/code&gt; 和 &lt;code&gt;j&lt;/code&gt; 終究都是整數 (本質型別都是 &lt;code&gt;int&lt;/code&gt;)，但它們的靜態型別分別是 &lt;code&gt;int&lt;/code&gt; 和 &lt;code&gt;MyInt&lt;/code&gt;，對於編譯器而言是完全不同的型別，所以必須強制轉型才能把值指定給另一個 (如 &lt;code&gt;i = int(j)&lt;/code&gt;)。&lt;/p&gt;
+
+&lt;p&gt;介面型別則是特定方法的集合。如果你把變數宣告成某個介面型別，它將可以儲存任意實值 (concrete value，這裡指的是「不是介面型別的值」)，只要那個實值有完整實作介面指定的方法。常見的例子就是 &lt;code&gt;io.Reader&lt;/code&gt; 和 &lt;code&gt;io.Writer&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// Reader is the interface that wraps the basic Read method.
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+// Writer is the interface that wraps the basic Write method.
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;任何型別只要有一樣的 &lt;code&gt;Read&lt;/code&gt; 方法，就稱之為「實作了 &lt;code&gt;io.Reader&lt;/code&gt;」型別；&lt;code&gt;io.Writer&lt;/code&gt; 亦同。所以如果把變數宣告成 &lt;code&gt;io.Reader&lt;/code&gt; 型別，這個變數就能儲存各種有 &lt;code&gt;Read&lt;/code&gt; 方法的實值。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;var r io.Reader
+r = os.Stdin
+r = bufio.NewReader(r)
+r = new(bytes.Buffer)
+// and so on
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;要特別注意一點：雖然上面 &lt;code&gt;r&lt;/code&gt; 的值一再更動，但它的型別始終是 &lt;code&gt;io.Reader&lt;/code&gt;。&lt;/p&gt;
+
+&lt;p&gt;空介面是更重要的例子&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;interface{}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;空介面沒有必要的方法，也就是說任何實值都實作了空介面。&lt;/p&gt;
+
+&lt;p&gt;千萬不要誤會介面是動態型別：上面 &lt;code&gt;r&lt;/code&gt; 裡儲存的實值雖然各種型別都有，但它們都必須實作 &lt;code&gt;io.Reader&lt;/code&gt; 介面，所以 &lt;code&gt;r&lt;/code&gt; 的型別始終會是 &lt;code&gt;io.Reader&lt;/code&gt;。&lt;/p&gt;
+
+&lt;p&gt;我們一再強調這些，是因為反射跟介面是息息相關的。&lt;/p&gt;
+
+&lt;h1 id=&#34;深入介面型別:d812e636372e45f142facfa0108f3bb6&#34;&gt;深入介面型別&lt;/h1&gt;
+
+&lt;p&gt;Russ Cos 寫了一篇&lt;a href=&#34;http://research.swtch.com/2009/12/go-data-structures-interfaces.html&#34;&gt;詳細的文章&lt;/a&gt;介紹 Go 的介面型別。本節只提其精要。&lt;/p&gt;
+
+&lt;p&gt;宣告為介面型別的變數其實儲存了兩個值：指定給它的實值，以及該實值真正的型別。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;var r io.Reader
+tty, err := os.OpenFile(&amp;quot;/dev/tty&amp;quot;, os.O_RDWR, 0)
+if err != nil {
+    return nil, err
+}
+r = tty
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;r&lt;/code&gt; 可以說是儲存了 &lt;code&gt;(tty, *os.File)&lt;/code&gt;。由於 &lt;code&gt;r&lt;/code&gt; 是 &lt;code&gt;io.Reader&lt;/code&gt; 型別，我們透過 &lt;code&gt;r&lt;/code&gt; 只能存取 &lt;code&gt;Read&lt;/code&gt; 方法；但 &lt;code&gt;r&lt;/code&gt; 也紀錄了實值的真正型別 &lt;code&gt;*os.File&lt;/code&gt;，所以我們才能這樣&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;var w io.Writer
+w = r.(io.Writer)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;這就是所謂的型別斷言 (type assertion)；這代表 &lt;code&gt;r&lt;/code&gt; 裡的實值 (&lt;code&gt;tty&lt;/code&gt;) 同時也實作了 &lt;code&gt;io.Writer&lt;/code&gt; 介面，所以才能指定給 &lt;code&gt;io.Writer&lt;/code&gt; 型別的變數。現在 &lt;code&gt;w&lt;/code&gt; 儲存了 &lt;code&gt;(tty, *os.File)&lt;/code&gt; 了，恰好跟 &lt;code&gt;r&lt;/code&gt; 存的一樣。雖然實值提供了更多方法，但變數的型別 (&lt;code&gt;io.Reader&lt;/code&gt;, &lt;code&gt;io.Writer&lt;/code&gt;) 限制了這個變數可以使用的方法。&lt;/p&gt;
+
+&lt;p&gt;再來，我們也可以&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;var empty interface{}
+empty = w
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;現在 &lt;code&gt;empty&lt;/code&gt; 也是 &lt;code&gt;(tty, *os.File)&lt;/code&gt; 了。你可以把任何實值指定給空介面的變數，而它也會老老實實地把一切儲存起來。&lt;/p&gt;
+
+&lt;p&gt;上面我們並沒有使用型別斷言，因為任何值都必然實作空介面。而在指定給 &lt;code&gt;w&lt;/code&gt; 的時候，有實作 &lt;code&gt;io.Reader&lt;/code&gt; 的實值不一定會實作 &lt;code&gt;io.Writer&lt;/code&gt;，所以需要型別斷言。&lt;/p&gt;
+
+&lt;p&gt;另外一個重要的點是：介面變數儲存的是 (實值, 實值的型別) 而非 (實值, 介面的型別)。介面變數只能存實值。&lt;/p&gt;
+
+&lt;p&gt;現在可以來談反射了。&lt;/p&gt;
+
+&lt;h1 id=&#34;反射第一法則:d812e636372e45f142facfa0108f3bb6&#34;&gt;反射第一法則&lt;/h1&gt;
+
+&lt;h2 id=&#34;1-反射可以把介面變數轉成對應的反射物件:d812e636372e45f142facfa0108f3bb6&#34;&gt;1. 反射可以把介面變數轉成對應的反射物件&lt;/h2&gt;
+
+&lt;p&gt;基本上，反射就是去驗證介面變數裡的東西 &lt;code&gt;(實值, 實值的型別)&lt;/code&gt;。讓我們從 &lt;code&gt;reflect.Type&lt;/code&gt; 和 &lt;code&gt;reflect.Value&lt;/code&gt; 開始。這兩個型別讓我們可以存取介面變數裡儲存的兩個東西。&lt;code&gt;reflect.ValueOf&lt;/code&gt; 跟 &lt;code&gt;reflect.TypeOf&lt;/code&gt; 可以把介面變數裡儲存的實值和型別轉成 &lt;code&gt;reflect.Value&lt;/code&gt; 和 &lt;code&gt;reflect.Type&lt;/code&gt; 傳出來。(雖然從 &lt;code&gt;reflect.Value&lt;/code&gt; 也能取得 &lt;code&gt;reflect.Type&lt;/code&gt;，不過我們先略過不提)&lt;/p&gt;
+
+&lt;p&gt;我們從 &lt;code&gt;reflect.TypeOf&lt;/code&gt; 開始：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;package main
+
+import (
+    &amp;quot;fmt&amp;quot;
+    &amp;quot;reflect&amp;quot;
+)
+
+func main() {
+    var x float64 = 3.4
+    fmt.Println(&amp;quot;type:&amp;quot;, reflect.TypeOf(x))
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;執行結果是&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;type: float64
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;你也許會懷疑介面在哪，程式裡只看到 &lt;code&gt;float64&lt;/code&gt; 而已啊？不過來看看 &lt;a href=&#34;http://golang.org/pkg/reflect/#TypeOf&#34;&gt;godoc&lt;/a&gt;，&lt;code&gt;reflect.TypeOf&lt;/code&gt; 接受的參數是空介面型別的：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;// TypeOf returns the reflection Type of the value in the interface{}.
+func TypeOf(i interface{}) Type
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;當執行 &lt;code&gt;reflect.TypeOf(x)&lt;/code&gt; 的時候，&lt;code&gt;x&lt;/code&gt; 會先存到一個暫時的空介面變數裡，也就是參數；&lt;code&gt;reflect.TypeOf&lt;/code&gt; 再從這個空介面變數中提取型別資訊。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;reflect.ValueOf&lt;/code&gt; 當然是提取實值出來&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;var x float64 = 3.4
+fmt.Println(&amp;quot;value:&amp;quot;, reflect.ValueOf(x))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;結果是&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;value: &amp;lt;float64 Value&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;reflect.Type&lt;/code&gt; 和 &lt;code&gt;reflect.Value&lt;/code&gt; 都有許多方法可以幫助我們驗證和處理。&lt;code&gt;reflect.Value&lt;/code&gt; 有個 &lt;code&gt;Type&lt;/code&gt; 方法可以取得 &lt;code&gt;reflect.Value&lt;/code&gt; 代表的實值的型別。而 &lt;code&gt;reflect.Type&lt;/code&gt; 和 &lt;code&gt;reflect.Value&lt;/code&gt; 都有 &lt;code&gt;Kind&lt;/code&gt; 方法可以偵測實值的種類：&lt;code&gt;Uint&lt;/code&gt;，&lt;code&gt;Float64&lt;/code&gt;，&lt;code&gt;Slice&lt;/code&gt; 等等。&lt;code&gt;reflect.Value&lt;/code&gt; 也有些方法可以把真正的值取出來：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;var x float64 = 3.4
+v := reflect.ValueOf(x)
+fmt.Println(&amp;quot;type:&amp;quot;, v.Type())
+fmt.Println(&amp;quot;kind is float64:&amp;quot;, v.Kind() == reflect.Float64)
+fmt.Println(&amp;quot;value:&amp;quot;, v.Float())
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;結果是&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;type: float64
+kind is float64: true
+value: 3.4
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;此外也有可以賦值的方法，但這要等到介紹第三法則的時候才會提到。&lt;/p&gt;
+
+&lt;p&gt;為了簡化反射機制，取值和賦值的方法都只保留最大的型別 (比如取得任何整數實值都是用 &lt;code&gt;Int&lt;/code&gt; 方法，而它會回傳 &lt;code&gt;int64&lt;/code&gt;)，所以你得自己轉型：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;var x uint8 = &#39;x&#39;
+v := reflect.ValueOf(x)
+fmt.Println(&amp;quot;type:&amp;quot;, v.Type())                            // uint8.
+fmt.Println(&amp;quot;kind is uint8: &amp;quot;, v.Kind() == reflect.Uint8) // true.
+x = uint8(v.Uint())                                       // v.Uint returns a uint64.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;而 &lt;code&gt;Kind&lt;/code&gt; 方法偵測的是本質型別，而非靜態型別：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;type MyInt int
+var x MyInt = 7
+v := reflect.ValueOf(x)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;v.Kind()&lt;/code&gt; 依然是 &lt;code&gt;reflect.Int&lt;/code&gt; 而非 &lt;code&gt;MyInt&lt;/code&gt;。換句話說，&lt;code&gt;Kind&lt;/code&gt; 無法分辨 &lt;code&gt;MyInt&lt;/code&gt; 和 &lt;code&gt;int&lt;/code&gt;，但 &lt;code&gt;Type&lt;/code&gt; 可以。&lt;/p&gt;
+
+&lt;h1 id=&#34;反射第二法則:d812e636372e45f142facfa0108f3bb6&#34;&gt;反射第二法則&lt;/h1&gt;
+
+&lt;h2 id=&#34;2-反射可以把反射物件轉成介面變數:d812e636372e45f142facfa0108f3bb6&#34;&gt;2. 反射可以把反射物件轉成介面變數&lt;/h2&gt;
+
+&lt;p&gt;既然是反射，自然也能反過來用。&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;reflect.Value&lt;/code&gt; 提供了 &lt;code&gt;Interface&lt;/code&gt; 方法把代表的實值重新包成介面變數&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// Interface returns v&#39;s value as an interface{}.
+func (v Value) Interface() interface{}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;接續前一節的程式，我們可以&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;y := v.Interface().(float64) // y will have type float64.
+fmt.Println(y)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;來印出實值。&lt;/p&gt;
+
+&lt;p&gt;更棒的是，因為 &lt;code&gt;fmt.Println&lt;/code&gt; 和 &lt;code&gt;fmt.Printf&lt;/code&gt; 等都接受空介面的參數 (&lt;code&gt;fmt&lt;/code&gt; 套件會從這個介面參數取得正確的實值和型別來處理)，所以要印出實值還可以更簡單&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;fmt.Println(v.Interface())
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;(因為 &lt;code&gt;v&lt;/code&gt; 的型別是 &lt;code&gt;reflect.Type&lt;/code&gt; 而非真正的實值 &lt;code&gt;float64&lt;/code&gt;，所以這裡不可以用 &lt;code&gt;fmt.Println(v)&lt;/code&gt;) 既然實值是 &lt;code&gt;float64&lt;/code&gt; 型別，我們還可以指定浮點數專用的格式：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;fmt.Printf(&amp;quot;value is %7.1e\n&amp;quot;, v.Interface())
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;結果是&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;3.4e+00
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;再提一次，我們不需要做型別斷言，&lt;code&gt;Printf&lt;/code&gt; 可以從介面變數取得正確的型別來處理它。&lt;/p&gt;
+
+&lt;p&gt;簡單來說，&lt;code&gt;Interface&lt;/code&gt; 方法就是 &lt;code&gt;refelct.ValueOf&lt;/code&gt; 的相反，只是它回傳的是空介面變數。&lt;/p&gt;
+
+&lt;p&gt;總而言之，反射可以在介面變數和反射物件間彼此轉換。&lt;/p&gt;
+
+&lt;h1 id=&#34;反射第三法則:d812e636372e45f142facfa0108f3bb6&#34;&gt;反射第三法則&lt;/h1&gt;
+
+&lt;h2 id=&#34;3-想賦值的話-反射物件必需是可賦值的:d812e636372e45f142facfa0108f3bb6&#34;&gt;3. 想賦值的話，反射物件必需是可賦值的&lt;/h2&gt;
+
+&lt;p&gt;第三法則是最容易混淆的，不過從頭說起其實很簡單。&lt;/p&gt;
+
+&lt;p&gt;以下程式碼是錯誤的，但非常值得研究一番：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;var x float64 = 3.4
+v := reflect.ValueOf(x)
+v.SetFloat(7.1) // Error: will panic.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;執行這些程式會噴錯&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;panic: reflect.Value.SetFloat using unaddressable value
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;問題不是 &lt;code&gt;7.1&lt;/code&gt; 無法定位 (unaddressable)，而是 &lt;code&gt;v&lt;/code&gt; 不可賦值。不是每個 &lt;code&gt;reflect.Value&lt;/code&gt; 都可賦值的。&lt;/p&gt;
+
+&lt;p&gt;你可以用 &lt;code&gt;CanSet&lt;/code&gt; 方法來偵測可賦值性&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;var x float64 = 3.4
+v := reflect.ValueOf(x)
+fmt.Println(&amp;quot;settability of v:&amp;quot;, v.CanSet())
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;結果是&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;settability of v: false
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;對不可賦值的 &lt;code&gt;Value&lt;/code&gt; 呼叫 &lt;code&gt;Set&lt;/code&gt; 系列方法就會噴這種錯誤。&lt;/p&gt;
+
+&lt;p&gt;可賦值性有點像是變數定位問題，但更狹義。它定義了一個反射物件是否可以修改它代表的實值。如果反射物件代表的是實值的本體而非副本，那反射物件就是可賦值的。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;var x float64 = 3.4
+v := reflect.ValueOf(x)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;由於參數傳遞的是副本，所以 &lt;code&gt;v&lt;/code&gt; 代表的其實不是真正的 &lt;code&gt;x&lt;/code&gt;，而是 &lt;code&gt;x&lt;/code&gt; 的副本，所以&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;v.SetFloat(7.1)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;必須噴錯，否則只有 &lt;code&gt;x&lt;/code&gt; 的副本的值會改變，&lt;code&gt;x&lt;/code&gt; 仍然會是 &lt;code&gt;3.4&lt;/code&gt;。這顯然並非我們的原意，也會造成許多困擾。&lt;/p&gt;
+
+&lt;p&gt;如果你覺得這很詭異，想想一般的函式&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;f(x)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;在 &lt;code&gt;f&lt;/code&gt; 裡更改 &lt;code&gt;x&lt;/code&gt; 的值不應該影響真正的 &lt;code&gt;x&lt;/code&gt;，&lt;code&gt;f&lt;/code&gt; 接收到的是 &lt;code&gt;x&lt;/code&gt; 的副本。如果想要在 &lt;code&gt;f&lt;/code&gt; 裡影響真正的 &lt;code&gt;x&lt;/code&gt;，應該要&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;f(&amp;amp;x)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;這應該比較好理解，而這正是反射的工作方式。如果想對某 &lt;code&gt;Value&lt;/code&gt; 賦值，就要用指標來建立 &lt;code&gt;Value&lt;/code&gt;。那麼我們來試看看&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;var x float64 = 3.4
+p := reflect.ValueOf(&amp;amp;x) // Note: take the address of x.
+fmt.Println(&amp;quot;type of p:&amp;quot;, p.Type())
+fmt.Println(&amp;quot;settability of p:&amp;quot;, p.CanSet())
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;結果是&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;type of p: *float64
+settability of p: false
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;之所以 &lt;code&gt;p&lt;/code&gt; 不可賦值，是因為 &lt;code&gt;p&lt;/code&gt; 代表的是 &lt;code&gt;&amp;amp;x&lt;/code&gt;，而我們想修改的是 &lt;code&gt;x&lt;/code&gt;，這可以用 &lt;code&gt;Elem&lt;/code&gt; 方法取得&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;v := p.Elem()
+fmt.Println(&amp;quot;settability of v:&amp;quot;, v.CanSet())
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;現在 &lt;code&gt;v&lt;/code&gt; 就是可賦值的了&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;settability of v: true
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;而且 &lt;code&gt;v&lt;/code&gt; 代表的是 &lt;code&gt;x&lt;/code&gt;，所以我們可以&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;v.SetFloat(7.1)
+fmt.Println(v.Interface())
+fmt.Println(x)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;結果當然是&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;7.1
+7.1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;反射可能不太好理解，但它十分忠實地反映了 Go 的工作模式。簡單來說，要用指標建麼的 &lt;code&gt;Value&lt;/code&gt; 才可賦值。&lt;/p&gt;
+
+&lt;h1 id=&#34;struct:d812e636372e45f142facfa0108f3bb6&#34;&gt;Struct&lt;/h1&gt;
+
+&lt;p&gt;在前一節，&lt;code&gt;v&lt;/code&gt; 本身不是指標，它只從某個指標轉化而來的。當你想修改某個 &lt;code&gt;struct&lt;/code&gt; 的成員時就會用到這點：既然你能取得 &lt;code&gt;struct&lt;/code&gt; 的位址，當然也可以修改它的成員。&lt;/p&gt;
+
+&lt;p&gt;以下範例分析某個 &lt;code&gt;struct&lt;/code&gt; 變數 &lt;code&gt;t&lt;/code&gt;。我們先用指標建立 &lt;code&gt;Value&lt;/code&gt;，因為等下會去修改 &lt;code&gt;t&lt;/code&gt; 的成員。然後把 &lt;code&gt;t&lt;/code&gt; 的型別儲存到 &lt;code&gt;typeOfT&lt;/code&gt; 裡，再呼叫一些相關的方法列舉出 &lt;code&gt;t&lt;/code&gt; 的成員。要注意雖然我們是從 &lt;code&gt;struct&lt;/code&gt; 的型別取得成員名稱，但成員的值本身仍然是 &lt;code&gt;Value&lt;/code&gt;。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;type T struct {
+    A int
+    B string
+}
+t := T{23, &amp;quot;skidoo&amp;quot;}
+s := reflect.ValueOf(&amp;amp;t).Elem()
+typeOfT := s.Type()
+for i := 0; i &amp;lt; s.NumField(); i++ {
+    f := s.Field(i)
+    fmt.Printf(&amp;quot;%d: %s %s = %v\n&amp;quot;, i,
+        typeOfT.Field(i).Name, f.Type(), f.Interface())
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;結果是&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;0: A int = 23
+1: B string = skidoo
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;有個重點剛剛沒有提到：&lt;code&gt;T&lt;/code&gt; 型別的所有成員都是大寫開頭的，因為只有公開成員才是可賦值的。&lt;/p&gt;
+
+&lt;p&gt;既然 &lt;code&gt;s 是可賦值的，我們當然可以用&lt;/code&gt;s&lt;code&gt;來修改&lt;/code&gt;t` 的 (可賦值的) 成員&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;s.Field(0).SetInt(77)
+s.Field(1).SetString(&amp;quot;Sunset Strip&amp;quot;)
+fmt.Println(&amp;quot;t is now&amp;quot;, t)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;結果是&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;t is now {77 Sunset Strip}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;如果 &lt;code&gt;s&lt;/code&gt; 是用 &lt;code&gt;t&lt;/code&gt; 建立的，那 &lt;code&gt;SetInt&lt;/code&gt; 跟 &lt;code&gt;SetString&lt;/code&gt; 就會噴錯了。&lt;/p&gt;
+
+&lt;h1 id=&#34;結論:d812e636372e45f142facfa0108f3bb6&#34;&gt;結論&lt;/h1&gt;
+
+&lt;p&gt;再說一次反射三大法則&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;反射可以把介面變數轉成對應的反射物件&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;反射可以把反射物件轉成介面變數&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;想賦值的話，反射物件必需是可賦值的&lt;br /&gt;
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;只要理解了這三大法則，反射雖然還是有點複雜，但會變得很好用了。反射機制極為強大，所以要小心使用，不到萬不得已最好別用。&lt;/p&gt;
+
+&lt;p&gt;還有很多反射相關的議題我們沒有討論到：傳送或接收 &lt;code&gt;channel&lt;/code&gt; 的資料、配置變數、&lt;code&gt;slice&lt;/code&gt; 和 &lt;code&gt;map&lt;/code&gt; 的操作、呼叫函式及方法等，不過篇幅已經夠長了。我們會再後續的文章裡再探討一些相關的議題。&lt;/p&gt;
+
+&lt;p&gt;原作者：Rob Pike&lt;br /&gt;
+改譯者：Ronmi Ren&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>有效地去 - Effective go 正體中文翻譯</title>
