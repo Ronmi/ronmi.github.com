@@ -25,11 +25,11 @@
 
 &lt;p&gt;&lt;strong&gt;註：以下適用 docker 1.10 以後的版本，舊版「理論上可以」，但我沒有測試，不保證能通用&lt;/strong&gt;&lt;/p&gt;
 
-&lt;h1 id=&#34;準備工作:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;準備工作&lt;/h1&gt;
+&lt;h1 id=&#34;準備工作&#34;&gt;準備工作&lt;/h1&gt;
 
 &lt;p&gt;由於 Docker 本身的設計並不適合讓兩個 docker daemon 共用資源，所以要先把網路、儲存設備先準備好。&lt;/p&gt;
 
-&lt;h2 id=&#34;網路:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;網路&lt;/h2&gt;
+&lt;h2 id=&#34;網路&#34;&gt;網路&lt;/h2&gt;
 
 &lt;p&gt;Docker 預設使用 &lt;code&gt;docker0&lt;/code&gt; 這個橋接介面，所以我們針對第二個 docker daemon 建立一個新的橋接器，再用 &lt;code&gt;-b&lt;/code&gt; 指定給它：&lt;/p&gt;
 
@@ -64,14 +64,14 @@ systemctl restart systemd-networkd
 
 &lt;p&gt;ip 要記得調開，不要跟已知的網段 (包括第一個 docker) 重覆。&lt;/p&gt;
 
-&lt;h2 id=&#34;儲存設備:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;儲存設備&lt;/h2&gt;
+&lt;h2 id=&#34;儲存設備&#34;&gt;儲存設備&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;mkdir -p /docker2/graph /docker2/tmp
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;graph 目錄是存放 image/container 用的，tmp 則是暫存目錄；pid/socket 存放在 &lt;code&gt;/docker2&lt;/code&gt;&lt;/p&gt;
 
-&lt;h1 id=&#34;wrapper:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;Wrapper&lt;/h1&gt;
+&lt;h1 id=&#34;wrapper&#34;&gt;Wrapper&lt;/h1&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;#!/bin/bash
 
@@ -87,11 +87,11 @@ exec docker &amp;quot;$@&amp;quot;
 
 &lt;p&gt;&lt;strong&gt;註：不要忘了加執行權限&lt;/strong&gt;&lt;/p&gt;
 
-&lt;h1 id=&#34;init-設定:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;init 設定&lt;/h1&gt;
+&lt;h1 id=&#34;init-設定&#34;&gt;init 設定&lt;/h1&gt;
 
 &lt;p&gt;為了簡便，第二個 docker 會使用 loop devicemapper。&lt;/p&gt;
 
-&lt;h2 id=&#34;systemd:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;systemd&lt;/h2&gt;
+&lt;h2 id=&#34;systemd&#34;&gt;systemd&lt;/h2&gt;
 
 &lt;p&gt;先把 &lt;code&gt;/lib/systemd/system/docker.socket&lt;/code&gt; 和 &lt;code&gt;/lib/systemd/system/docker.service&lt;/code&gt; 複製一份到 &lt;code&gt;/etc/systemd/system&lt;/code&gt;，然後把複本檔名裡的 &lt;code&gt;docker&lt;/code&gt; 改成 &lt;code&gt;docker2&lt;/code&gt;。&lt;/p&gt;
 
@@ -124,7 +124,7 @@ docker2 info
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;systemctl enable docker2
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h1 id=&#34;建立-gitlab-ci-runner:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;建立 gitlab-ci runner&lt;/h1&gt;
+&lt;h1 id=&#34;建立-gitlab-ci-runner&#34;&gt;建立 gitlab-ci runner&lt;/h1&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;docker run -d --name runner1 --hostname runner1 -v /docker2/docker.sock:/var/run/docker.sock --privileged --restart always gitlab/gitlab-runner
 docker exec -it runner1 gitlab-runner register -n -r &amp;quot;gitlab-runner-register-token&amp;quot; --url &amp;quot;http://your.gitlab.url/ci&amp;quot; --executor docker --docker-image gitlab/dind --docker-privileged --name runner1 --docker-volumes /var/run/docker.sock:/var/run/docker.sock
@@ -142,7 +142,7 @@ docker exec -it runner1 gitlab-runner register -n -r &amp;quot;gitlab-runner-reg
 &lt;br /&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h1 id=&#34;完成:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;完成&lt;/h1&gt;
+&lt;h1 id=&#34;完成&#34;&gt;完成&lt;/h1&gt;
 
 &lt;p&gt;指定一個 build job 給新的 runner，應該就可以用 &lt;code&gt;docker2 ps -a&lt;/code&gt; 和 &lt;code&gt;docker2 images&lt;/code&gt; 看到 job container 及相關資訊。&lt;/p&gt;
 </description>

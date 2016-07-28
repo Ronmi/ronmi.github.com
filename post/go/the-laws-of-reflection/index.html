@@ -97,6 +97,10 @@
 	  translate
       </a></div>
       
+      <div><a href="https://ronmi.github.io//categories/typescript">
+	  typescript
+      </a></div>
+      
     </div>
   </li>
   
@@ -116,6 +120,10 @@
 	  go
       </a></div>
       
+      <div><a href="https://ronmi.github.io//tags/karma">
+	  karma
+      </a></div>
+      
       <div><a href="https://ronmi.github.io//tags/root">
 	  root
       </a></div>
@@ -124,8 +132,20 @@
 	  sony
       </a></div>
       
+      <div><a href="https://ronmi.github.io//tags/test">
+	  test
+      </a></div>
+      
       <div><a href="https://ronmi.github.io//tags/translate">
 	  translate
+      </a></div>
+      
+      <div><a href="https://ronmi.github.io//tags/typescript">
+	  typescript
+      </a></div>
+      
+      <div><a href="https://ronmi.github.io//tags/webpack">
+	  webpack
       </a></div>
       
     </div>
@@ -184,27 +204,27 @@
     <h1 class="title" itemprop="name">The Laws of Reflection 中譯</h1>
 	<div class="entry-content" itemprop="articleBody">
 
-<h1 id="權利聲明:d812e636372e45f142facfa0108f3bb6">權利聲明</h1>
+<h1 id="權利聲明">權利聲明</h1>
 
-<h3 id="原文:d812e636372e45f142facfa0108f3bb6">原文</h3>
+<h3 id="原文">原文</h3>
 
 <p>原作者：Rob Pike</p>
 
 <p>原文位於 <a href="https://blog.golang.org/laws-of-reflection">https://blog.golang.org/laws-of-reflection</a>，依 CC BY 3.0 及 BSD 授權，相關權利非屬改譯者所有，詳見原文最末之權利宣告部份。</p>
 
-<h3 id="改譯:d812e636372e45f142facfa0108f3bb6">改譯</h3>
+<h3 id="改譯">改譯</h3>
 
 <p>改譯者：任仲平 Ronmi Ren</p>
 
 <p>本文相關權利屬改譯者所有。除中譯外，為求通順易讀，略有改動，與原文不盡相同。本文以 CC BY 3.0 TW 公開授權，惟程式碼部份除中譯外皆由原文抄錄而來，故依原授權條款授權。</p>
 
-<h1 id="介紹:d812e636372e45f142facfa0108f3bb6">介紹</h1>
+<h1 id="介紹">介紹</h1>
 
 <p>「反射」一詞，在程式設計領域中，特指程式藉由型別系統來偵測、驗證自身結構的能力，是 metaprogramming 的一種。它也非常容易讓人搞混。</p>
 
 <p>不同程式語言中，對於「反射」的定義和實行方式不盡相同。本篇文章旨在解釋 Go 中的反射機制，不應與其他語言混為一談。</p>
 
-<h1 id="型別與介面:d812e636372e45f142facfa0108f3bb6">型別與介面</h1>
+<h1 id="型別與介面">型別與介面</h1>
 
 <p>既然反射機制是基於型別系統而來的，我們就從 Go 的型別系統講起。</p>
 
@@ -253,7 +273,7 @@ r = new(bytes.Buffer)
 
 <p>我們一再強調這些，是因為反射跟介面是息息相關的。</p>
 
-<h1 id="深入介面型別:d812e636372e45f142facfa0108f3bb6">深入介面型別</h1>
+<h1 id="深入介面型別">深入介面型別</h1>
 
 <p>Russ Cos 寫了一篇<a href="http://research.swtch.com/2009/12/go-data-structures-interfaces.html">詳細的文章</a>介紹 Go 的介面型別。本節只提其精要。</p>
 
@@ -289,9 +309,9 @@ empty = w
 
 <p>現在可以來談反射了。</p>
 
-<h1 id="反射第一法則:d812e636372e45f142facfa0108f3bb6">反射第一法則</h1>
+<h1 id="反射第一法則">反射第一法則</h1>
 
-<h2 id="1-反射可以把介面變數轉成對應的反射物件:d812e636372e45f142facfa0108f3bb6">1. 反射可以把介面變數轉成對應的反射物件</h2>
+<h2 id="1-反射可以把介面變數轉成對應的反射物件">1. 反射可以把介面變數轉成對應的反射物件</h2>
 
 <p>基本上，反射就是去驗證介面變數裡的東西 <code>(實值, 實值的型別)</code>。讓我們從 <code>reflect.Type</code> 和 <code>reflect.Value</code> 開始。這兩個型別讓我們可以存取介面變數裡儲存的兩個東西。<code>reflect.ValueOf</code> 跟 <code>reflect.TypeOf</code> 可以把介面變數裡儲存的實值和型別轉成 <code>reflect.Value</code> 和 <code>reflect.Type</code> 傳出來。(雖然從 <code>reflect.Value</code> 也能取得 <code>reflect.Type</code>，不過我們先略過不提)</p>
 
@@ -370,9 +390,9 @@ v := reflect.ValueOf(x)
 
 <p><code>v.Kind()</code> 依然是 <code>reflect.Int</code> 而非 <code>MyInt</code>。換句話說，<code>Kind</code> 無法分辨 <code>MyInt</code> 和 <code>int</code>，但 <code>Type</code> 可以。</p>
 
-<h1 id="反射第二法則:d812e636372e45f142facfa0108f3bb6">反射第二法則</h1>
+<h1 id="反射第二法則">反射第二法則</h1>
 
-<h2 id="2-反射可以把反射物件轉成介面變數:d812e636372e45f142facfa0108f3bb6">2. 反射可以把反射物件轉成介面變數</h2>
+<h2 id="2-反射可以把反射物件轉成介面變數">2. 反射可以把反射物件轉成介面變數</h2>
 
 <p>既然是反射，自然也能反過來用。</p>
 
@@ -411,9 +431,9 @@ fmt.Println(y)
 
 <p>總而言之，反射可以在介面變數和反射物件間彼此轉換。</p>
 
-<h1 id="反射第三法則:d812e636372e45f142facfa0108f3bb6">反射第三法則</h1>
+<h1 id="反射第三法則">反射第三法則</h1>
 
-<h2 id="3-想賦值的話-反射物件必需是可賦值的:d812e636372e45f142facfa0108f3bb6">3. 想賦值的話，反射物件必需是可賦值的</h2>
+<h2 id="3-想賦值的話-反射物件必需是可賦值的">3. 想賦值的話，反射物件必需是可賦值的</h2>
 
 <p>第三法則是最容易混淆的，不過從頭說起其實很簡單。</p>
 
@@ -508,7 +528,7 @@ fmt.Println(x)
 
 <p>反射可能不太好理解，但它十分忠實地反映了 Go 的工作模式。簡單來說，要用指標建麼的 <code>Value</code> 才可賦值。</p>
 
-<h1 id="struct:d812e636372e45f142facfa0108f3bb6">Struct</h1>
+<h1 id="struct">Struct</h1>
 
 <p>在前一節，<code>v</code> 本身不是指標，它只從某個指標轉化而來的。當你想修改某個 <code>struct</code> 的成員時就會用到這點：既然你能取得 <code>struct</code> 的位址，當然也可以修改它的成員。</p>
 
@@ -550,7 +570,7 @@ fmt.Println(&quot;t is now&quot;, t)
 
 <p>如果 <code>s</code> 是用 <code>t</code> 建立的，那 <code>SetInt</code> 跟 <code>SetString</code> 就會噴錯了。</p>
 
-<h1 id="結論:d812e636372e45f142facfa0108f3bb6">結論</h1>
+<h1 id="結論">結論</h1>
 
 <p>再說一次反射三大法則</p>
 

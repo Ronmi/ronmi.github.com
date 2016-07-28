@@ -21,7 +21,7 @@
 
 &lt;p&gt;整個清掉重刷之後果然手機反應速度回復正常，free memory 也回到 1.2 GB，不禁讓人感嘆這後門程式的粗製濫造。同志，走後門也是得裝個樣子你說是不？&lt;/p&gt;
 
-&lt;h2 id=&#34;tools:2f643943f70f9c01d7e42e97920cdc40&#34;&gt;Tools&lt;/h2&gt;
+&lt;h2 id=&#34;tools&#34;&gt;Tools&lt;/h2&gt;
 
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&#34;https://mega.co.nz/#!nEAzHb6A!5aTtcHZtqgA3W7rRADI7To8DwaOxBZtEnOkezQoiITE&#34;&gt;舊版台灣ftf&lt;/a&gt;&lt;br /&gt;&lt;/li&gt;
@@ -32,7 +32,7 @@
 &lt;br /&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&#34;synopsis:2f643943f70f9c01d7e42e97920cdc40&#34;&gt;Synopsis&lt;/h2&gt;
+&lt;h2 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h2&gt;
 
 &lt;p&gt;根據 XZlockeddualrecovery 的警告，我推測這個刷法對 Unlocked Bootloader 可能會有無法預期的後果，要用這個方法之前建議還是先 Relock&lt;/p&gt;
 
@@ -48,7 +48,7 @@
 &lt;br /&gt;&lt;/li&gt;
 &lt;/ol&gt;
 
-&lt;h2 id=&#34;tips:2f643943f70f9c01d7e42e97920cdc40&#34;&gt;Tips&lt;/h2&gt;
+&lt;h2 id=&#34;tips&#34;&gt;Tips&lt;/h2&gt;
 
 &lt;p&gt;iFirm 用法：點左邊選手機型號，點中間選韌體的區域，最右邊會有可下載的韌體版本，有點小字不是很容易注意到。&lt;/p&gt;
 

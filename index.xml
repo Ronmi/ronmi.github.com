@@ -7,7 +7,154 @@
     <language>zh-tw</language>
     <author>Ronmi Ren</author>
     
-    <updated>Wed, 15 Jun 2016 09:04:18 CST</updated>
+    <updated>Thu, 28 Jul 2016 11:33:02 CST</updated>
+    
+    <item>
+      <title>在 karma&#43;webpack 的環境下讓 test coverage 正確顯示 typescript</title>
+      <link>https://ronmi.github.io/post/typescript/test-coverage-with-karma-and-webpack/</link>
+      <pubDate>Thu, 28 Jul 2016 11:33:02 CST</pubDate>
+      <author>Ronmi Ren</author>
+      <guid>https://ronmi.github.io/post/typescript/test-coverage-with-karma-and-webpack/</guid>
+      <description>
+
+&lt;p&gt;可能不是最佳解，但至少 works for me&lt;/p&gt;
+
+&lt;h2 id=&#34;先備知識&#34;&gt;先備知識&lt;/h2&gt;
+
+&lt;p&gt;至少要先做到 &lt;code&gt;karma start&lt;/code&gt; 可以跑測試。&lt;/p&gt;
+
+&lt;h2 id=&#34;概念&#34;&gt;概念&lt;/h2&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;tsc&lt;/code&gt; 會產生 &lt;code&gt;typescript &amp;lt;=&amp;gt; javascript&lt;/code&gt; 對映的 source map&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;karma + webpack + karma-coverage 可以正確處理 js 檔&lt;br /&gt;
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;所以乾脆就用 &lt;code&gt;tsc&lt;/code&gt; 把程式編成 javascript 再測，然後用 &lt;code&gt;remap-istanbul&lt;/code&gt; 把最後的 test coverage 結果用 &lt;code&gt;tsc&lt;/code&gt; 產生的 source map 轉回 tpescript。&lt;/p&gt;
+
+&lt;h2 id=&#34;步驟&#34;&gt;步驟&lt;/h2&gt;
+
+&lt;h3 id=&#34;準備必要的套件&#34;&gt;準備必要的套件&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;npm i -D karma-coverage karma-remap-istanbul istanbul-instrumenter-loader&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;準備-tsc-的設定&#34;&gt;準備 tsc 的設定&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;outDir&lt;/code&gt; 可以使用，但如果你的程式是 js/ts 混合的話要考慮一下，會增加等下設定 karma 和 webpack 的困擾。&lt;/p&gt;
+
+&lt;p&gt;最重要的是 &lt;code&gt;sourceMap&lt;/code&gt; 一定要是 true，沒有 source map 的話 &lt;code&gt;remap-istanbul&lt;/code&gt; 也無用武之地。&lt;/p&gt;
+
+&lt;h3 id=&#34;設定-karma&#34;&gt;設定 karma&lt;/h3&gt;
+
+&lt;p&gt;每個設定的作用可以自己去看 &lt;a href=&#34;https://karma-runner.github.io/1.0/config/configuration-file.html&#34;&gt;karma 文件&lt;/a&gt;，這裡不多說明，只提我有踩到雷的地方。&lt;/p&gt;
+
+&lt;p&gt;假設原始碼放在 &lt;code&gt;./src&lt;/code&gt;，測試碼放在 &lt;code&gt;./test&lt;/code&gt; 且檔名是 &lt;code&gt;xxxxTest.ts&lt;/code&gt; 的話。首先是 &lt;code&gt;files&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;// 在 tsc 設定 outDir: &amp;quot;./build&amp;quot; 的情況
+files: [
+  &#39;./build/test/**/*Test.js&#39;
+],
+
+// 沒有開 outDir
+files: [
+  &#39;./test/**/*Test.js&#39;
+],
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;這邊要你自己參考跑測試時的設定，把 typescript 檔改成 javascript 檔的路徑&lt;/p&gt;
+
+&lt;p&gt;再來設定 &lt;code&gt;preprocessor&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;// 記得照上面的提示修改路徑
+preprocessers: {
+  &#39;./build/src/**/*.js&#39;: [&#39;webpack&#39;, &#39;sourcemap&#39;, &#39;coverage&#39;],
+  &#39;./build/test/**/*.js&#39;: [&#39;webpack&#39;],
+},
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;注意一下 &lt;code&gt;sourcemap&lt;/code&gt; 和 &lt;code&gt;coverage&lt;/code&gt; 都只要加在原始碼的部份就好了&lt;/p&gt;
+
+&lt;p&gt;然後是 &lt;code&gt;webpack&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;webpack: {
+  devtool: &#39;source-map&#39;,
+  resolve: {
+    // 記得不要加 .ts 和 .tsx
+    extensions: [&amp;quot;&amp;quot;, &amp;quot;.webpack.js&amp;quot;, &amp;quot;.web.js&amp;quot;, &amp;quot;.js&amp;quot;, &amp;quot;.json&amp;quot;],
+  },
+  module: {
+    loaders: [
+      // 用 enzyme 必加，詳見 https://github.com/airbnb/enzyme/issues/47
+      { test: /\.json$/, loader: &#39;json&#39; },
+      // 底下加上其他你測試有用到的 loader (用來 load typescript 的就不用加了)
+      {
+        test: /\.css/,
+        loader: &amp;quot;style-loader!css-loader&amp;quot;,
+        exclude: /css\//,
+      },
+    ],
+    preLoaders: [
+      // 原始碼的 js 要用 istanbuul-instrumenter 處理一下，才會有正確的 coverage 資訊出來
+      { test: /\.js$/, loader: &amp;quot;istanbul-instrumenter&amp;quot;, exclude: /(node_modules|test)/ }
+    ]
+  },
+  // 這段也是用 enzyme 才需要的資訊
+  externals: {
+    &#39;react/addons&#39;: true,
+    &#39;react/lib/ExecutionEnvironment&#39;: true,
+    &#39;react/lib/ReactContext&#39;: true,
+  },
+},
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;接著設定 &lt;code&gt;repoters&lt;/code&gt;，要加上 &lt;code&gt;coverage&lt;/code&gt; 和 &lt;code&gt;karma-remap-istanbul&lt;/code&gt; 和它們的設定&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;reporters: [&#39;mocha&#39;, &#39;coverage&#39;, &#39;karma-remap-istanbul&#39;],
+
+coverageReporter: {
+  dir: &#39;./coverage&#39;,
+  reporters: [
+    { type: &#39;json&#39;, subdir: &#39;.&#39; },
+  ],
+},
+remapIstanbulReporter: {
+  src: &#39;./coverage/coverage-final.json&#39;,
+  reports: {
+    html: &#39;./coverage&#39;,
+  },
+},
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;因為 &lt;code&gt;remap-istanbul&lt;/code&gt; 要資料來源是 json 檔，所以要先用 &lt;code&gt;karma-coverage&lt;/code&gt; 產生 json，再用 &lt;code&gt;remapIstanbulReporter.src&lt;/code&gt; 指定正確的檔案位址。&lt;/p&gt;
+
+&lt;p&gt;最後，不要忘了在 &lt;code&gt;plugins&lt;/code&gt; 加上 &lt;code&gt;karma-coverage&lt;/code&gt; 和 &lt;code&gt;karma-remap-istanbul&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;跑看看&#34;&gt;跑看看&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;tsc &amp;amp;&amp;amp; karma start
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;我相信你第一次跑應該是失敗的，第二次跑可能就成功了。&lt;/p&gt;
+
+&lt;p&gt;這是因為 &lt;code&gt;remap-istanbul&lt;/code&gt; 會用 &lt;code&gt;watch&lt;/code&gt; 監聽 json 檔的變化。但這個 watch 很兩光：檔案原本不存在的話就沒辦法監聽了。所以要先用 &lt;code&gt;touch&lt;/code&gt; 確認 json 檔存在&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;mkdir -p ./coverage &amp;amp;&amp;amp; touch ./coverage/coverage-final.json &amp;amp;&amp;amp; tsc &amp;amp;&amp;amp; karma start
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;所以說&#34;&gt;所以說&lt;/h2&gt;
+
+&lt;p&gt;不同的專案肯定會需要一些不同的設定，所以記好這個解法的概念比較重要：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;先用 tsc 編出 js 檔，然後把測試的設定裡的 ts 來源通通換成相應的 js
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;或是&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;有錢就好了
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
     
     <item>
       <title>The Laws of Reflection 中譯</title>
@@ -17,27 +164,27 @@
       <guid>https://ronmi.github.io/post/go/the-laws-of-reflection/</guid>
       <description>
 
-&lt;h1 id=&#34;權利聲明:d812e636372e45f142facfa0108f3bb6&#34;&gt;權利聲明&lt;/h1&gt;
+&lt;h1 id=&#34;權利聲明&#34;&gt;權利聲明&lt;/h1&gt;
 
-&lt;h3 id=&#34;原文:d812e636372e45f142facfa0108f3bb6&#34;&gt;原文&lt;/h3&gt;
+&lt;h3 id=&#34;原文&#34;&gt;原文&lt;/h3&gt;
 
 &lt;p&gt;原作者：Rob Pike&lt;/p&gt;
 
 &lt;p&gt;原文位於 &lt;a href=&#34;https://blog.golang.org/laws-of-reflection&#34;&gt;https://blog.golang.org/laws-of-reflection&lt;/a&gt;，依 CC BY 3.0 及 BSD 授權，相關權利非屬改譯者所有，詳見原文最末之權利宣告部份。&lt;/p&gt;
 
-&lt;h3 id=&#34;改譯:d812e636372e45f142facfa0108f3bb6&#34;&gt;改譯&lt;/h3&gt;
+&lt;h3 id=&#34;改譯&#34;&gt;改譯&lt;/h3&gt;
 
 &lt;p&gt;改譯者：任仲平 Ronmi Ren&lt;/p&gt;
 
 &lt;p&gt;本文相關權利屬改譯者所有。除中譯外，為求通順易讀，略有改動，與原文不盡相同。本文以 CC BY 3.0 TW 公開授權，惟程式碼部份除中譯外皆由原文抄錄而來，故依原授權條款授權。&lt;/p&gt;
 
-&lt;h1 id=&#34;介紹:d812e636372e45f142facfa0108f3bb6&#34;&gt;介紹&lt;/h1&gt;
+&lt;h1 id=&#34;介紹&#34;&gt;介紹&lt;/h1&gt;
 
 &lt;p&gt;「反射」一詞，在程式設計領域中，特指程式藉由型別系統來偵測、驗證自身結構的能力，是 metaprogramming 的一種。它也非常容易讓人搞混。&lt;/p&gt;
 
 &lt;p&gt;不同程式語言中，對於「反射」的定義和實行方式不盡相同。本篇文章旨在解釋 Go 中的反射機制，不應與其他語言混為一談。&lt;/p&gt;
 
-&lt;h1 id=&#34;型別與介面:d812e636372e45f142facfa0108f3bb6&#34;&gt;型別與介面&lt;/h1&gt;
+&lt;h1 id=&#34;型別與介面&#34;&gt;型別與介面&lt;/h1&gt;
 
 &lt;p&gt;既然反射機制是基於型別系統而來的，我們就從 Go 的型別系統講起。&lt;/p&gt;
 
@@ -86,7 +233,7 @@ r = new(bytes.Buffer)
 
 &lt;p&gt;我們一再強調這些，是因為反射跟介面是息息相關的。&lt;/p&gt;
 
-&lt;h1 id=&#34;深入介面型別:d812e636372e45f142facfa0108f3bb6&#34;&gt;深入介面型別&lt;/h1&gt;
+&lt;h1 id=&#34;深入介面型別&#34;&gt;深入介面型別&lt;/h1&gt;
 
 &lt;p&gt;Russ Cos 寫了一篇&lt;a href=&#34;http://research.swtch.com/2009/12/go-data-structures-interfaces.html&#34;&gt;詳細的文章&lt;/a&gt;介紹 Go 的介面型別。本節只提其精要。&lt;/p&gt;
 
@@ -122,9 +269,9 @@ empty = w
 
 &lt;p&gt;現在可以來談反射了。&lt;/p&gt;
 
-&lt;h1 id=&#34;反射第一法則:d812e636372e45f142facfa0108f3bb6&#34;&gt;反射第一法則&lt;/h1&gt;
+&lt;h1 id=&#34;反射第一法則&#34;&gt;反射第一法則&lt;/h1&gt;
 
-&lt;h2 id=&#34;1-反射可以把介面變數轉成對應的反射物件:d812e636372e45f142facfa0108f3bb6&#34;&gt;1. 反射可以把介面變數轉成對應的反射物件&lt;/h2&gt;
+&lt;h2 id=&#34;1-反射可以把介面變數轉成對應的反射物件&#34;&gt;1. 反射可以把介面變數轉成對應的反射物件&lt;/h2&gt;
 
 &lt;p&gt;基本上，反射就是去驗證介面變數裡的東西 &lt;code&gt;(實值, 實值的型別)&lt;/code&gt;。讓我們從 &lt;code&gt;reflect.Type&lt;/code&gt; 和 &lt;code&gt;reflect.Value&lt;/code&gt; 開始。這兩個型別讓我們可以存取介面變數裡儲存的兩個東西。&lt;code&gt;reflect.ValueOf&lt;/code&gt; 跟 &lt;code&gt;reflect.TypeOf&lt;/code&gt; 可以把介面變數裡儲存的實值和型別轉成 &lt;code&gt;reflect.Value&lt;/code&gt; 和 &lt;code&gt;reflect.Type&lt;/code&gt; 傳出來。(雖然從 &lt;code&gt;reflect.Value&lt;/code&gt; 也能取得 &lt;code&gt;reflect.Type&lt;/code&gt;，不過我們先略過不提)&lt;/p&gt;
 
@@ -203,9 +350,9 @@ v := reflect.ValueOf(x)
 
 &lt;p&gt;&lt;code&gt;v.Kind()&lt;/code&gt; 依然是 &lt;code&gt;reflect.Int&lt;/code&gt; 而非 &lt;code&gt;MyInt&lt;/code&gt;。換句話說，&lt;code&gt;Kind&lt;/code&gt; 無法分辨 &lt;code&gt;MyInt&lt;/code&gt; 和 &lt;code&gt;int&lt;/code&gt;，但 &lt;code&gt;Type&lt;/code&gt; 可以。&lt;/p&gt;
 
-&lt;h1 id=&#34;反射第二法則:d812e636372e45f142facfa0108f3bb6&#34;&gt;反射第二法則&lt;/h1&gt;
+&lt;h1 id=&#34;反射第二法則&#34;&gt;反射第二法則&lt;/h1&gt;
 
-&lt;h2 id=&#34;2-反射可以把反射物件轉成介面變數:d812e636372e45f142facfa0108f3bb6&#34;&gt;2. 反射可以把反射物件轉成介面變數&lt;/h2&gt;
+&lt;h2 id=&#34;2-反射可以把反射物件轉成介面變數&#34;&gt;2. 反射可以把反射物件轉成介面變數&lt;/h2&gt;
 
 &lt;p&gt;既然是反射，自然也能反過來用。&lt;/p&gt;
 
@@ -244,9 +391,9 @@ fmt.Println(y)
 
 &lt;p&gt;總而言之，反射可以在介面變數和反射物件間彼此轉換。&lt;/p&gt;
 
-&lt;h1 id=&#34;反射第三法則:d812e636372e45f142facfa0108f3bb6&#34;&gt;反射第三法則&lt;/h1&gt;
+&lt;h1 id=&#34;反射第三法則&#34;&gt;反射第三法則&lt;/h1&gt;
 
-&lt;h2 id=&#34;3-想賦值的話-反射物件必需是可賦值的:d812e636372e45f142facfa0108f3bb6&#34;&gt;3. 想賦值的話，反射物件必需是可賦值的&lt;/h2&gt;
+&lt;h2 id=&#34;3-想賦值的話-反射物件必需是可賦值的&#34;&gt;3. 想賦值的話，反射物件必需是可賦值的&lt;/h2&gt;
 
 &lt;p&gt;第三法則是最容易混淆的，不過從頭說起其實很簡單。&lt;/p&gt;
 
@@ -341,7 +488,7 @@ fmt.Println(x)
 
 &lt;p&gt;反射可能不太好理解，但它十分忠實地反映了 Go 的工作模式。簡單來說，要用指標建麼的 &lt;code&gt;Value&lt;/code&gt; 才可賦值。&lt;/p&gt;
 
-&lt;h1 id=&#34;struct:d812e636372e45f142facfa0108f3bb6&#34;&gt;Struct&lt;/h1&gt;
+&lt;h1 id=&#34;struct&#34;&gt;Struct&lt;/h1&gt;
 
 &lt;p&gt;在前一節，&lt;code&gt;v&lt;/code&gt; 本身不是指標，它只從某個指標轉化而來的。當你想修改某個 &lt;code&gt;struct&lt;/code&gt; 的成員時就會用到這點：既然你能取得 &lt;code&gt;struct&lt;/code&gt; 的位址，當然也可以修改它的成員。&lt;/p&gt;
 
@@ -383,7 +530,7 @@ fmt.Println(&amp;quot;t is now&amp;quot;, t)
 
 &lt;p&gt;如果 &lt;code&gt;s&lt;/code&gt; 是用 &lt;code&gt;t&lt;/code&gt; 建立的，那 &lt;code&gt;SetInt&lt;/code&gt; 跟 &lt;code&gt;SetString&lt;/code&gt; 就會噴錯了。&lt;/p&gt;
 
-&lt;h1 id=&#34;結論:d812e636372e45f142facfa0108f3bb6&#34;&gt;結論&lt;/h1&gt;
+&lt;h1 id=&#34;結論&#34;&gt;結論&lt;/h1&gt;
 
 &lt;p&gt;再說一次反射三大法則&lt;/p&gt;
 
@@ -419,11 +566,11 @@ fmt.Println(&amp;quot;t is now&amp;quot;, t)
 
 &lt;p&gt;&lt;strong&gt;註：以下適用 docker 1.10 以後的版本，舊版「理論上可以」，但我沒有測試，不保證能通用&lt;/strong&gt;&lt;/p&gt;
 
-&lt;h1 id=&#34;準備工作:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;準備工作&lt;/h1&gt;
+&lt;h1 id=&#34;準備工作&#34;&gt;準備工作&lt;/h1&gt;
 
 &lt;p&gt;由於 Docker 本身的設計並不適合讓兩個 docker daemon 共用資源，所以要先把網路、儲存設備先準備好。&lt;/p&gt;
 
-&lt;h2 id=&#34;網路:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;網路&lt;/h2&gt;
+&lt;h2 id=&#34;網路&#34;&gt;網路&lt;/h2&gt;
 
 &lt;p&gt;Docker 預設使用 &lt;code&gt;docker0&lt;/code&gt; 這個橋接介面，所以我們針對第二個 docker daemon 建立一個新的橋接器，再用 &lt;code&gt;-b&lt;/code&gt; 指定給它：&lt;/p&gt;
 
@@ -458,14 +605,14 @@ systemctl restart systemd-networkd
 
 &lt;p&gt;ip 要記得調開，不要跟已知的網段 (包括第一個 docker) 重覆。&lt;/p&gt;
 
-&lt;h2 id=&#34;儲存設備:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;儲存設備&lt;/h2&gt;
+&lt;h2 id=&#34;儲存設備&#34;&gt;儲存設備&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;mkdir -p /docker2/graph /docker2/tmp
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;graph 目錄是存放 image/container 用的，tmp 則是暫存目錄；pid/socket 存放在 &lt;code&gt;/docker2&lt;/code&gt;&lt;/p&gt;
 
-&lt;h1 id=&#34;wrapper:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;Wrapper&lt;/h1&gt;
+&lt;h1 id=&#34;wrapper&#34;&gt;Wrapper&lt;/h1&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;#!/bin/bash
 
@@ -481,11 +628,11 @@ exec docker &amp;quot;$@&amp;quot;
 
 &lt;p&gt;&lt;strong&gt;註：不要忘了加執行權限&lt;/strong&gt;&lt;/p&gt;
 
-&lt;h1 id=&#34;init-設定:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;init 設定&lt;/h1&gt;
+&lt;h1 id=&#34;init-設定&#34;&gt;init 設定&lt;/h1&gt;
 
 &lt;p&gt;為了簡便，第二個 docker 會使用 loop devicemapper。&lt;/p&gt;
 
-&lt;h2 id=&#34;systemd:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;systemd&lt;/h2&gt;
+&lt;h2 id=&#34;systemd&#34;&gt;systemd&lt;/h2&gt;
 
 &lt;p&gt;先把 &lt;code&gt;/lib/systemd/system/docker.socket&lt;/code&gt; 和 &lt;code&gt;/lib/systemd/system/docker.service&lt;/code&gt; 複製一份到 &lt;code&gt;/etc/systemd/system&lt;/code&gt;，然後把複本檔名裡的 &lt;code&gt;docker&lt;/code&gt; 改成 &lt;code&gt;docker2&lt;/code&gt;。&lt;/p&gt;
 
@@ -518,7 +665,7 @@ docker2 info
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;systemctl enable docker2
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h1 id=&#34;建立-gitlab-ci-runner:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;建立 gitlab-ci runner&lt;/h1&gt;
+&lt;h1 id=&#34;建立-gitlab-ci-runner&#34;&gt;建立 gitlab-ci runner&lt;/h1&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;docker run -d --name runner1 --hostname runner1 -v /docker2/docker.sock:/var/run/docker.sock --privileged --restart always gitlab/gitlab-runner
 docker exec -it runner1 gitlab-runner register -n -r &amp;quot;gitlab-runner-register-token&amp;quot; --url &amp;quot;http://your.gitlab.url/ci&amp;quot; --executor docker --docker-image gitlab/dind --docker-privileged --name runner1 --docker-volumes /var/run/docker.sock:/var/run/docker.sock
@@ -536,7 +683,7 @@ docker exec -it runner1 gitlab-runner register -n -r &amp;quot;gitlab-runner-reg
 &lt;br /&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h1 id=&#34;完成:f370d75d42e29bc27188dc29fb29e84e&#34;&gt;完成&lt;/h1&gt;
+&lt;h1 id=&#34;完成&#34;&gt;完成&lt;/h1&gt;
 
 &lt;p&gt;指定一個 build job 給新的 runner，應該就可以用 &lt;code&gt;docker2 ps -a&lt;/code&gt; 和 &lt;code&gt;docker2 images&lt;/code&gt; 看到 job container 及相關資訊。&lt;/p&gt;
 </description>
@@ -554,7 +701,7 @@ docker exec -it runner1 gitlab-runner register -n -r &amp;quot;gitlab-runner-reg
 
 &lt;p&gt;整個清掉重刷之後果然手機反應速度回復正常，free memory 也回到 1.2 GB，不禁讓人感嘆這後門程式的粗製濫造。同志，走後門也是得裝個樣子你說是不？&lt;/p&gt;
 
-&lt;h2 id=&#34;tools:2f643943f70f9c01d7e42e97920cdc40&#34;&gt;Tools&lt;/h2&gt;
+&lt;h2 id=&#34;tools&#34;&gt;Tools&lt;/h2&gt;
 
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&#34;https://mega.co.nz/#!nEAzHb6A!5aTtcHZtqgA3W7rRADI7To8DwaOxBZtEnOkezQoiITE&#34;&gt;舊版台灣ftf&lt;/a&gt;&lt;br /&gt;&lt;/li&gt;
@@ -565,7 +712,7 @@ docker exec -it runner1 gitlab-runner register -n -r &amp;quot;gitlab-runner-reg
 &lt;br /&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&#34;synopsis:2f643943f70f9c01d7e42e97920cdc40&#34;&gt;Synopsis&lt;/h2&gt;
+&lt;h2 id=&#34;synopsis&#34;&gt;Synopsis&lt;/h2&gt;
 
 &lt;p&gt;根據 XZlockeddualrecovery 的警告，我推測這個刷法對 Unlocked Bootloader 可能會有無法預期的後果，要用這個方法之前建議還是先 Relock&lt;/p&gt;
 
@@ -581,7 +728,7 @@ docker exec -it runner1 gitlab-runner register -n -r &amp;quot;gitlab-runner-reg
 &lt;br /&gt;&lt;/li&gt;
 &lt;/ol&gt;
 
-&lt;h2 id=&#34;tips:2f643943f70f9c01d7e42e97920cdc40&#34;&gt;Tips&lt;/h2&gt;
+&lt;h2 id=&#34;tips&#34;&gt;Tips&lt;/h2&gt;
 
 &lt;p&gt;iFirm 用法：點左邊選手機型號，點中間選韌體的區域，最右邊會有可下載的韌體版本，有點小字不是很容易注意到。&lt;/p&gt;
 
@@ -603,17 +750,17 @@ docker exec -it runner1 gitlab-runner register -n -r &amp;quot;gitlab-runner-reg
       <guid>https://ronmi.github.io/post/go/effectivego/</guid>
       <description>
 
-&lt;h2 id=&#34;簡介:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;簡介&lt;/h2&gt;
+&lt;h2 id=&#34;簡介&#34;&gt;簡介&lt;/h2&gt;
 
 &lt;p&gt;Go 是一門新的程式語言。雖然它從現有的程式語言中借鏡了許多設計理念，但它也有許多與眾不同的特性。若你把用 C++ / Java 撰寫的程式改寫成等價的 Go 程式，恐怕難以得到令人滿意的結果。同樣地，用 Go 語言的角度來解決問題，你可能會寫出有效但不太一樣的程式。換句話說，想要寫出好的 Go 程式，對於 Go 語言特性及慣例的掌握是重要的一環。同時，對於社群慣例 (比如排版、命名方式、程式的建立等等) 也應該要適當的了解，這樣其他使用 Go 語言的開發者才容易理解你寫的程式。&lt;/p&gt;
 
 &lt;p&gt;這份文件列舉出一些訣竅，讓你寫出清楚、符合 Go 語言特性的程式。這是對於 &lt;a href=&#34;https://golang.org/ref/spec&#34;&gt;Go 語言規格書&lt;/a&gt;、&lt;a href=&#34;https://tour.golang.org/&#34;&gt;導覽 Go 語言&lt;/a&gt; 以及 &lt;a href=&#34;https://golang.org/doc/code.html&#34;&gt;如何撰寫 Go 程式&lt;/a&gt; 等三份文件的補充，所以你應該先讀過這三份文件。&lt;/p&gt;
 
-&lt;h3 id=&#34;範例:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;範例&lt;/h3&gt;
+&lt;h3 id=&#34;範例&#34;&gt;範例&lt;/h3&gt;
 
 &lt;p&gt;&lt;a href=&#34;https://golang.org/src/&#34;&gt;Go 標準套件庫原始碼&lt;/a&gt; 除了作為核心程式庫之外，也是如何使用 Go 語言的範例。更進一步地，大部份的套件都會有一些可以直接在 &lt;a href=&#34;golang.org&#34;&gt;golang.org&lt;/a&gt; 網站上讓你實驗的範例，比如像是 &lt;a href=&#34;https://golang.org/pkg/strings/#example_Map&#34;&gt;這個&lt;/a&gt; (你也許會需要點擊 Example 字樣來顯示範例)。如果你對於如何呈現問題或是某事物的實作方式有疑問，Go 套件庫的文件、原始碼以及範例可以提供你靈感、解答或是相關的背景知識。&lt;/p&gt;
 
-&lt;h2 id=&#34;排版格式:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;排版格式&lt;/h2&gt;
+&lt;h2 id=&#34;排版格式&#34;&gt;排版格式&lt;/h2&gt;
 
 &lt;p&gt;排版風格問題是最常被討論但很少有結果的問題。人們可以套用各式各樣的風格，但如果大家的風格能統一的話會更好。風格統一最困難的一點，就是如何避免寫出落落長的風格規範。&lt;/p&gt;
 
@@ -649,7 +796,7 @@ docker exec -it runner1 gitlab-runner register -n -r &amp;quot;gitlab-runner-reg
 &lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;x&amp;lt;&amp;lt;8 + y&amp;lt;&amp;lt;16
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;註解:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;註解&lt;/h2&gt;
+&lt;h2 id=&#34;註解&#34;&gt;註解&lt;/h2&gt;
 
 &lt;p&gt;Go 提供的 C 風格的區塊註解 /* */ 以及 C++ 風格的行內註解 //。行內註解比較常用到，區塊註解通常是用來說明整個套件，但當你想要暫時停用某段程式碼的時候也很適合。&lt;/p&gt;
 
@@ -733,11 +880,11 @@ var (
 )
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;命名規則:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;命名規則&lt;/h2&gt;
+&lt;h2 id=&#34;命名規則&#34;&gt;命名規則&lt;/h2&gt;
 
 &lt;p&gt;就像在其他語言一樣，命名規則對 Go 語言來說是十分重要的。更進一步地，它還有語意上的效果：一個變數、常數、函式是否能被其他套件的程式碼取用，端看它的名稱是否是以大寫字母開頭。所以命名規則實在值得我們花點篇幅好好介紹一番。&lt;/p&gt;
 
-&lt;h3 id=&#34;套件命名:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;套件命名&lt;/h3&gt;
+&lt;h3 id=&#34;套件命名&#34;&gt;套件命名&lt;/h3&gt;
 
 &lt;p&gt;當你引用 (import) 某個套件之後，它的名稱便成為你存取相關資源的憑據。比如你&lt;/p&gt;
 
@@ -752,7 +899,7 @@ var (
 
 &lt;p&gt;另一個好例子是 &lt;code&gt;once.Do&lt;/code&gt;：寫 &lt;code&gt;once.Do(setup)&lt;/code&gt; 很清楚，就算你寫的更長 &lt;code&gt;once.DoOrWaitUntilDone(setup)&lt;/code&gt; 也不會更清楚。很長的名稱不見得讓人容易理解，清楚又精確的說明文件會更有效果。&lt;/p&gt;
 
-&lt;h3 id=&#34;成員存取方法-getter-setter:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;成員存取方法 (Getter / Setter)&lt;/h3&gt;
+&lt;h3 id=&#34;成員存取方法-getter-setter&#34;&gt;成員存取方法 (Getter / Setter)&lt;/h3&gt;
 
 &lt;p&gt;Go 語言並沒有在語言層面支援成員存取方法。使用成員存取方法沒有錯，而且通常是不錯的設計模式，但是在成員存取方法前加上 Get 或 Set 既不必要，也不符合 Go 語言的慣例。如果你有個成員變數叫做 &lt;code&gt;owner&lt;/code&gt; (小寫字母開頭代表不能公開存取)，那麼相關的成員存取方法應該稱為 &lt;code&gt;Owner()&lt;/code&gt; (大寫字母開頭) 以及 &lt;code&gt;SetOwner()&lt;/code&gt;。這樣閱讀起來也十分清楚：&lt;/p&gt;
 
@@ -762,17 +909,17 @@ if owner != user {
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;介面名稱:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;介面名稱&lt;/h3&gt;
+&lt;h3 id=&#34;介面名稱&#34;&gt;介面名稱&lt;/h3&gt;
 
 &lt;p&gt;慣例上，只有一個方法的介面，會用方法的名字加上 er 字尾，或是其他類似的方式來命名，這樣可以營造一種代理人的感覺，像是 &lt;code&gt;Reader&lt;/code&gt;, &lt;code&gt;Writer&lt;/code&gt;, &lt;code&gt;Formatter&lt;/code&gt; 等等。&lt;/p&gt;
 
 &lt;p&gt;像這樣的名字很多，而遵守這個慣例會讓你更有生產力。像是 &lt;code&gt;Read&lt;/code&gt;, &lt;code&gt;Write&lt;/code&gt;, &lt;code&gt;Close&lt;/code&gt;, &lt;code&gt;String&lt;/code&gt; 這些都是，它們都有標準化的定義。為了避免混淆，除非你寫的函式和它們有相同的定義，否則就不要使用這些名字。相反地，如果你實做了相同的定義的函式，那麼就應該照它們的方式命名，比如用 &lt;code&gt;String&lt;/code&gt; 而不是 &lt;code&gt;ToString&lt;/code&gt;。&lt;/p&gt;
 
-&lt;h3 id=&#34;大小寫混合:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;大小寫混合&lt;/h3&gt;
+&lt;h3 id=&#34;大小寫混合&#34;&gt;大小寫混合&lt;/h3&gt;
 
 &lt;p&gt;最後，如果你需要使用數個單字來做命名，用 &lt;code&gt;MixedCaps&lt;/code&gt; 或是 &lt;code&gt;mixedCaps&lt;/code&gt;，不要用底線。&lt;/p&gt;
 
-&lt;h2 id=&#34;分號:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;分號&lt;/h2&gt;
+&lt;h2 id=&#34;分號&#34;&gt;分號&lt;/h2&gt;
 
 &lt;p&gt;Go 也像 C 語言一樣使用分號來分隔敘述，但你在源碼檔中看不見它們。Go 的編譯器 (正確來說是語法分析器 lexer) 會依照簡單的規則自動在分析語法的時候幫你加上分號，所以通常你不需要自己動手。&lt;/p&gt;
 
@@ -797,11 +944,11 @@ if owner != user {
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;流程控制:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;流程控制&lt;/h2&gt;
+&lt;h2 id=&#34;流程控制&#34;&gt;流程控制&lt;/h2&gt;
 
 &lt;p&gt;Go 的流程控制語法跟 C 很像，但有很多重要的不同。Go 沒有 &lt;code&gt;do&lt;/code&gt; 和 &lt;code&gt;while&lt;/code&gt;，只有比 C 更通用一點的 &lt;code&gt;for&lt;/code&gt;；&lt;code&gt;switch&lt;/code&gt; 比較有彈性；&lt;code&gt;if&lt;/code&gt; 跟 &lt;code&gt;switch&lt;/code&gt; 可以在條件判斷式之前加上一個初始語句，有點像 &lt;code&gt;for&lt;/code&gt; 那樣；&lt;code&gt;break&lt;/code&gt; 和 &lt;code&gt;continue&lt;/code&gt; 可以指定標記；而且還有一些新的特性：支援型別判斷的 &lt;code&gt;switch&lt;/code&gt; 和頻道多工器 &lt;code&gt;select&lt;/code&gt;。語法上也有些微不同：條件式不用加小括號、不能省略大括號。&lt;/p&gt;
 
-&lt;h3 id=&#34;if:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;if&lt;/h3&gt;
+&lt;h3 id=&#34;if&#34;&gt;if&lt;/h3&gt;
 
 &lt;p&gt;簡單的 &lt;code&gt;if&lt;/code&gt; 語句像是這樣&lt;/p&gt;
 
@@ -843,7 +990,7 @@ if err != nil {
 codeUsing(f, d)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;重新宣告與重新指定:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;重新宣告與重新指定&lt;/h3&gt;
+&lt;h3 id=&#34;重新宣告與重新指定&#34;&gt;重新宣告與重新指定&lt;/h3&gt;
 
 &lt;p&gt;上一節的最後一個範例展示了短式宣告 &lt;code&gt;:=&lt;/code&gt; 的使用方式。&lt;/p&gt;
 
@@ -870,7 +1017,7 @@ codeUsing(f, d)
 
 &lt;p&gt;備註：值得注意的是，在 Go 語言中，函式的參數及回傳值雖然寫在函式大括號的外面，但其實它們跟函式本體屬於同一個有效範圍。&lt;/p&gt;
 
-&lt;h3 id=&#34;for:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;for&lt;/h3&gt;
+&lt;h3 id=&#34;for&#34;&gt;for&lt;/h3&gt;
 
 &lt;p&gt;Go 裡面的 &lt;code&gt;for&lt;/code&gt; 跟 C 裡面的有點像又不太像。它把 &lt;code&gt;for&lt;/code&gt; 跟 &lt;code&gt;while&lt;/code&gt; 整合在一起：因為 Go 沒有 *do-while*。&lt;code&gt;for&lt;/code&gt; 有三種形式：&lt;/p&gt;
 
@@ -941,7 +1088,7 @@ for i, j := 0, len(a)-1; i &amp;lt; j; i, j = i+1, j-1 {
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;switch:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;switch&lt;/h3&gt;
+&lt;h3 id=&#34;switch&#34;&gt;switch&lt;/h3&gt;
 
 &lt;p&gt;Go 的 &lt;code&gt;switch&lt;/code&gt; 比 C 的要泛用。&lt;code&gt;case&lt;/code&gt; 敘述比對的值不一定要是常數。&lt;code&gt;case&lt;/code&gt; 敘述會依上到下的順序一一比對，直到找到符合的項目。如果 &lt;code&gt;switch&lt;/code&gt; 後面沒有東西，那麼就會當成是 &lt;code&gt;switch true&lt;/code&gt;。所以你可以 (而且這也是慣例) 把一長串的 &lt;code&gt;if-else if&lt;/code&gt; 改寫成 &lt;code&gt;switch&lt;/code&gt;：&lt;/p&gt;
 
@@ -1021,7 +1168,7 @@ func Compare(a, b []byte) int {
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;判斷型別的-switch-type-switch:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;判斷型別的 switch (type switch)&lt;/h3&gt;
+&lt;h3 id=&#34;判斷型別的-switch-type-switch&#34;&gt;判斷型別的 switch (type switch)&lt;/h3&gt;
 
 &lt;p&gt;&lt;code&gt;switch&lt;/code&gt; 也可以用來判斷動態型別，這會用到型別斷言 (type assertion) 的語法及 &lt;code&gt;type&lt;/code&gt; 關鍵字。如果你宣告一個區域變數給它，那麼這個區域變數的型別會和 &lt;code&gt;case&lt;/code&gt; 敘述比對的型別相同：&lt;/p&gt;
 
@@ -1041,9 +1188,9 @@ case *int:
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;函式:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;函式&lt;/h2&gt;
+&lt;h2 id=&#34;函式&#34;&gt;函式&lt;/h2&gt;
 
-&lt;h3 id=&#34;多重傳回值:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;多重傳回值&lt;/h3&gt;
+&lt;h3 id=&#34;多重傳回值&#34;&gt;多重傳回值&lt;/h3&gt;
 
 &lt;p&gt;Go 有個很不尋常的特性：函式及方法可以回傳多個值。這個特性可以改善一些 C 語言的不良慣例：出錯時回傳負值，並改變某個傳址的參數。&lt;/p&gt;
 
@@ -1072,7 +1219,7 @@ for i := 0; i &amp;lt; len(b); {
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;回傳值的預先命名:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;回傳值的預先命名&lt;/h3&gt;
+&lt;h3 id=&#34;回傳值的預先命名&#34;&gt;回傳值的預先命名&lt;/h3&gt;
 
 &lt;p&gt;回傳值可以預先給予名字，這樣就可以在函式內像一般變數那樣地使用它。它們會被初始化為零值，而遇到沒有加上回傳值的 &lt;code&gt;return&lt;/code&gt; 語句時，就會把它們傳回去。&lt;/p&gt;
 
@@ -1094,7 +1241,7 @@ for i := 0; i &amp;lt; len(b); {
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;defer:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;Defer&lt;/h3&gt;
+&lt;h3 id=&#34;defer&#34;&gt;Defer&lt;/h3&gt;
 
 &lt;p&gt;&lt;code&gt;defer&lt;/code&gt; 語句是把某個函式的呼叫排程在離開目前函式時才執行。這個特性不是很常用，但在某些情況下，比如釋放的資源，會非常有用。典型的例子是釋放同步鎖或是關閉檔案：&lt;/p&gt;
 
@@ -1185,9 +1332,9 @@ leaving: b
 
 &lt;p&gt;譯註：上一段翻譯品質不佳，需要 PR&lt;/p&gt;
 
-&lt;h2 id=&#34;資料:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;資料&lt;/h2&gt;
+&lt;h2 id=&#34;資料&#34;&gt;資料&lt;/h2&gt;
 
-&lt;h3 id=&#34;用-new-來配置:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;用 &lt;em&gt;new&lt;/em&gt; 來配置&lt;/h3&gt;
+&lt;h3 id=&#34;用-new-來配置&#34;&gt;用 &lt;em&gt;new&lt;/em&gt; 來配置&lt;/h3&gt;
 
 &lt;p&gt;Go 有兩個配置資源的內建函式：&lt;code&gt;new&lt;/code&gt; 和 &lt;code&gt;make&lt;/code&gt;。兩者適用於不同的場合，也許看起來有點讓人容易搞混，但其實很簡單。我們先來看 &lt;code&gt;new&lt;/code&gt;。雖然它確實會配置記憶體，但不像在其他語言那樣，Go 的 new 函式不會「建構」它 (譯註)，只會填入零值。也就是說，&lt;code&gt;new(T)&lt;/code&gt; 配置了一塊記憶體，填入符合 &lt;code&gt;T&lt;/code&gt; 型別的零值，然後把位址傳回來。用 Go 的講法，就是回傳一個 &lt;code&gt;T&lt;/code&gt; 型別的指標，記憶體內容是零值。&lt;/p&gt;
 
@@ -1211,7 +1358,7 @@ var v SyncedBuffer      // type  SyncedBuffer
 
 &lt;p&gt;譯註：因為 &lt;code&gt;SyncedBuffer&lt;/code&gt; 的所有成員都符合這個零值就能使用的特性，所以它本身也可以直接使用。&lt;/p&gt;
 
-&lt;h3 id=&#34;建構子及複合結構的表達式-literal:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;建構子及複合結構的表達式 (literal)&lt;/h3&gt;
+&lt;h3 id=&#34;建構子及複合結構的表達式-literal&#34;&gt;建構子及複合結構的表達式 (literal)&lt;/h3&gt;
 
 &lt;p&gt;有時候零值實在無法符合我們的需求，這時候就要乖乖寫建構子了。以下是從 &lt;code&gt;os&lt;/code&gt; 套件節錄出來的一小段程式：&lt;/p&gt;
 
@@ -1258,7 +1405,7 @@ s := []string      {Enone: &amp;quot;no error&amp;quot;, Eio: &amp;quot;Eio&amp;
 m := map[int]string{Enone: &amp;quot;no error&amp;quot;, Eio: &amp;quot;Eio&amp;quot;, Einval: &amp;quot;invalid argument&amp;quot;}
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;用-make-來配置:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;用 &lt;em&gt;make&lt;/em&gt; 來配置&lt;/h3&gt;
+&lt;h3 id=&#34;用-make-來配置&#34;&gt;用 &lt;em&gt;make&lt;/em&gt; 來配置&lt;/h3&gt;
 
 &lt;p&gt;內建的 &lt;code&gt;make(T, args)&lt;/code&gt; 函式雖然也是配置，但與 &lt;code&gt;new(T)&lt;/code&gt; 完全不同。它是專門用來配置 slice, map 以及 channel 用的，而且它回傳的會是「初始化」過的 &lt;code&gt;T&lt;/code&gt; 型別 (不是 &lt;code&gt;*T&lt;/code&gt; 型別，也不是零值)。這三種型別會參考到一些必須要初始化的內部資料結構，所以需要另外處理。像是 slice，其實是一個資料結構，記載了指標 (指向陣列中的資料)，長度和容量。如果這三者沒有被初始化的話&lt;br /&gt;
 ， slice 就是 nil。所以 &lt;code&gt;make&lt;/code&gt; 會初始化 slice, map 和 channel 的內部資料結構以備使用。例如：&lt;/p&gt;
@@ -1283,7 +1430,7 @@ v := make([]int, 100)
 
 &lt;p&gt;要注意的是 &lt;code&gt;make&lt;/code&gt; 只能配置 slice, map 或是 channel，而且它回傳的不是指標。如果一定要指標的話，你得用 &lt;code&gt;new&lt;/code&gt; 去處理。(譯註：像上面那個例子中，比較複雜的那部份一樣)&lt;/p&gt;
 
-&lt;h3 id=&#34;array:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;Array&lt;/h3&gt;
+&lt;h3 id=&#34;array&#34;&gt;Array&lt;/h3&gt;
 
 &lt;p&gt;譯註：array 通常譯為陣列，但在 Go 語言中，array 十分容易與 slice (通常譯為片段)搞混。兩者在 Go 語言中的意涵與其他語言不大相同，可以算是專有名詞，故以下都不做翻譯，藉此提升讀者對這兩個名詞的熟悉度。而「陣列」一詞則會泛指類 C 語言中的陣列的行為。&lt;/p&gt;
 
@@ -1313,7 +1460,7 @@ x := Sum(&amp;amp;array)  // Note the explicit address-of operator
 
 &lt;p&gt;不過這不是 Go 語言的慣例，我們應該用 slice。&lt;/p&gt;
 
-&lt;h3 id=&#34;slice:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;Slice&lt;/h3&gt;
+&lt;h3 id=&#34;slice&#34;&gt;Slice&lt;/h3&gt;
 
 &lt;p&gt;Slice 可以說是在 array 外面包了一層，提供更方便有效的介面存取一連串的資料。除了像是處理矩陣這種事之外，在 Go 語言中大部份的陣列操作都是用 slice 完成的。&lt;/p&gt;
 
@@ -1364,7 +1511,7 @@ for i := 0; i &amp;lt; 32; i++ {
 
 &lt;p&gt;這個範例實用到我們決定內建一個類似的函式 &lt;code&gt;append&lt;/code&gt;。我們還需要了解一些其他的知識才能理解 &lt;code&gt;append&lt;/code&gt; 的設計，所以之後的章節會再次討論 &lt;code&gt;append&lt;/code&gt;。&lt;/p&gt;
 
-&lt;h3 id=&#34;二維的-slice:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;二維的 slice&lt;/h3&gt;
+&lt;h3 id=&#34;二維的-slice&#34;&gt;二維的 slice&lt;/h3&gt;
 
 &lt;p&gt;Array 和 slice 都是一維的。Go 語言中所謂二維的 array 或是 slice，其實是「裝載 array 的 array」以及「裝載 slice 的 slice」：&lt;/p&gt;
 
@@ -1403,7 +1550,7 @@ for i := range picture {
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;map:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;Map&lt;/h3&gt;
+&lt;h3 id=&#34;map&#34;&gt;Map&lt;/h3&gt;
 
 &lt;p&gt;Map 是非常好用的內建型別，它將某種型別的值 (這個值稱為索引) 跟另一種型別的值 (稱為元素，或是直接稱為值) 配成一對。任何可以使用 &lt;code&gt;==&lt;/code&gt; 比對的型別都可以當做索引，像是整數、浮點數、複數、字串、指標、介面 (如果這個介面可以用 &lt;code&gt;==&lt;/code&gt; 比對的話)、struct 或 array。Slice 不能用來當索引，因為它不支援 &lt;code&gt;==&lt;/code&gt;。Map 也像 slice 那樣，有個內部的資料結構。如果你把 map 當成參數傳入某個函式中，在函式內修改 map 的元素也會反映到函式外。&lt;/p&gt;
 
@@ -1464,7 +1611,7 @@ seconds, ok = timeZone[tz]
 &lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;delete(timeZone, &amp;quot;PDT&amp;quot;)  // Now on Standard Time
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;格式化輸出:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;格式化輸出&lt;/h3&gt;
+&lt;h3 id=&#34;格式化輸出&#34;&gt;格式化輸出&lt;/h3&gt;
 
 &lt;p&gt;(譯註：原文 printing 通常譯為列印，但本節內容係介紹類似 C 語言中 printf 的函式，故譯作格式化輸出)&lt;/p&gt;
 
@@ -1599,7 +1746,7 @@ func Println(v ...interface{}) {
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;append:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;Append&lt;/h3&gt;
+&lt;h3 id=&#34;append&#34;&gt;Append&lt;/h3&gt;
 
 &lt;p&gt;現在我們已經準備好要解決 &lt;code&gt;append&lt;/code&gt; 函式最後的謎團。內建的 &lt;code&gt;append&lt;/code&gt; 函式的定義和上面我們自訂的 &lt;code&gt;Append&lt;/code&gt; 函式不一樣。概念上，&lt;code&gt;append&lt;/code&gt; 的定義可以說是&lt;/p&gt;
 
@@ -1627,11 +1774,11 @@ fmt.Println(x)
 
 &lt;p&gt;如果沒有 &lt;code&gt;...&lt;/code&gt; 的話就會發生編譯錯誤，因為 &lt;code&gt;y&lt;/code&gt; 的型別是 &lt;code&gt;[]int&lt;/code&gt; 而不是 &lt;code&gt;int&lt;/code&gt;。&lt;/p&gt;
 
-&lt;h2 id=&#34;初始化:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;初始化&lt;/h2&gt;
+&lt;h2 id=&#34;初始化&#34;&gt;初始化&lt;/h2&gt;
 
 &lt;p&gt;雖然 Go 語言的初始化看起來跟 C/C++ 的差別不大，但事實上它強大多了。初始化的時候可以建立複雜的結構，在物件之間，甚至是套件之間的順序問題也能正確的解決。&lt;/p&gt;
 
-&lt;h3 id=&#34;常數:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;常數&lt;/h3&gt;
+&lt;h3 id=&#34;常數&#34;&gt;常數&lt;/h3&gt;
 
 &lt;p&gt;在 Go 語言裡，常數就是個常數。不論是全域的還是區域的，它們在編譯的時候就已經產生好了，型別也只能是數值、字元、rune、字串或是 bool。因為編譯時期的限制，定義常數只能用靜態表達式，而編譯器會執行這些表達式。舉例來說， &lt;code&gt;1&amp;lt;&amp;lt;3&lt;/code&gt; 是靜態表達式，但 &lt;code&gt;math.Sin(math.Pi/4)&lt;/code&gt; 則不是：因為要到執行的時候才會做函式呼叫。&lt;/p&gt;
 
@@ -1681,7 +1828,7 @@ const (
 
 &lt;p&gt;這段程式碼不會造成無限遞迴，因為 &lt;code&gt;%f&lt;/code&gt; 不會呼叫到 &lt;code&gt;String&lt;/code&gt; - 它接受的是浮點數而非字串。&lt;/p&gt;
 
-&lt;h3 id=&#34;變數:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;變數&lt;/h3&gt;
+&lt;h3 id=&#34;變數&#34;&gt;變數&lt;/h3&gt;
 
 &lt;p&gt;變數也可以初始化，而且可以使用一般的敘述。&lt;/p&gt;
 
@@ -1692,7 +1839,7 @@ const (
 )
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;init-函式:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;&lt;em&gt;init&lt;/em&gt; 函式&lt;/h3&gt;
+&lt;h3 id=&#34;init-函式&#34;&gt;&lt;em&gt;init&lt;/em&gt; 函式&lt;/h3&gt;
 
 &lt;p&gt;最後，每個源碼檔都可以定義自己的 &lt;code&gt;init&lt;/code&gt; 函式，這個函式不接受任何參數。事實上，每個源碼檔可以有複數個 &lt;code&gt;init&lt;/code&gt; 函式。&lt;code&gt;init&lt;/code&gt; 是整個初始化環節的最後一步：要等到套件中為變數初始化的敘述都執行完，而且 &lt;code&gt;import&lt;/code&gt; 進來的套件也初始化完畢之後，才會執行 &lt;code&gt;init&lt;/code&gt;。&lt;/p&gt;
 
@@ -1713,9 +1860,9 @@ const (
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;方法:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;方法&lt;/h2&gt;
+&lt;h2 id=&#34;方法&#34;&gt;方法&lt;/h2&gt;
 
-&lt;h3 id=&#34;指標與值:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;指標與值&lt;/h3&gt;
+&lt;h3 id=&#34;指標與值&#34;&gt;指標與值&lt;/h3&gt;
 
 &lt;p&gt;回想一下我們先前提過的 &lt;code&gt;ByteSize&lt;/code&gt;，我們可以為任何型別定義方法 (除了指標型別或是介面型別)；接收器不一定要是 struct。&lt;/p&gt;
 
@@ -1759,9 +1906,9 @@ fmt.Fprintf(&amp;amp;b, &amp;quot;This hour has %d days\n&amp;quot;, 7)
 
 &lt;p&gt;題外話，上面那個改寫成 &lt;code&gt;Write&lt;/code&gt; 的主意就是我們在實作 &lt;code&gt;bytes.Buffer&lt;/code&gt; 時的中心思想。&lt;/p&gt;
 
-&lt;h2 id=&#34;介面以及其他型別:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;介面以及其他型別&lt;/h2&gt;
+&lt;h2 id=&#34;介面以及其他型別&#34;&gt;介面以及其他型別&lt;/h2&gt;
 
-&lt;h3 id=&#34;介面:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;介面&lt;/h3&gt;
+&lt;h3 id=&#34;介面&#34;&gt;介面&lt;/h3&gt;
 
 &lt;p&gt;在 Go 語言中，介面是用來指定物件的行為：如果某個物件可以做「這件事」，那麼它就可以用來當成是「這種東西」。先前我們已經看到好幾個簡單的例子：我們可以透過 &lt;code&gt;String&lt;/code&gt; 方法來實作自訂的輸出，而 &lt;code&gt;Fprintf&lt;/code&gt; 可以輸出到任何有實作 &lt;code&gt;Write&lt;/code&gt; 方法的物件裡。&lt;/p&gt;
 
@@ -1794,7 +1941,7 @@ func (s Sequence) String() string {
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;型別轉換:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;型別轉換&lt;/h3&gt;
+&lt;h3 id=&#34;型別轉換&#34;&gt;型別轉換&lt;/h3&gt;
 
 &lt;p&gt;上面的 &lt;code&gt;String&lt;/code&gt; 方法其實是把 &lt;code&gt;Sprint&lt;/code&gt; 函式對 slice 做的事重寫了一遍。我們可以把 &lt;code&gt;Sequence&lt;/code&gt; 轉成 &lt;code&gt;[]int&lt;/code&gt; 型別來享受 &lt;code&gt;fmt&lt;/code&gt; 套件的勞動成果。&lt;/p&gt;
 
@@ -1819,7 +1966,7 @@ func (s Sequence) String() string {
 
 &lt;p&gt;原本我們是在 &lt;code&gt;Sequence&lt;/code&gt; 實作特定介面來達成排序的需求，現在是利用型別轉換來取用在 &lt;code&gt;sort.IntSlice&lt;/code&gt; 中定義的排序方法。這樣的技巧在實際環境中比較少用，但是非常有效率。&lt;/p&gt;
 
-&lt;h3 id=&#34;介面的轉換以及型別斷言:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;介面的轉換以及型別斷言&lt;/h3&gt;
+&lt;h3 id=&#34;介面的轉換以及型別斷言&#34;&gt;介面的轉換以及型別斷言&lt;/h3&gt;
 
 &lt;p&gt;早先提到的 type switch 也是一種型別轉換：針對某個介面的實體，視它符合哪個 &lt;code&gt;case&lt;/code&gt; 所指定的型別，然後把它轉換成那個型別。以下是一個簡化的例子，示範了 &lt;code&gt;fmt.Prinf&lt;/code&gt; 是如何用 type switch 把值變成字串。如果值本來就是字串，那就直接輸出不用轉換；如果它有實作 &lt;code&gt;String&lt;/code&gt; 方法，那就用 &lt;code&gt;String&lt;/code&gt; 方法回傳的結果。&lt;/p&gt;
 
@@ -1869,7 +2016,7 @@ if ok {
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;一般性:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;一般性&lt;/h3&gt;
+&lt;h3 id=&#34;一般性&#34;&gt;一般性&lt;/h3&gt;
 
 &lt;p&gt;如果某個型別完全只是為了實作特定介面而存在的，那我們完全不必讓它可以公開存取，只要讓介面可以公開存取就夠了。這樣可以明白表示重要的是它的行為，而不是實作它的那個東西；這讓其他具有不同特性的實作方式也能保持相同的行為。同時也讓你避過了一份說明要寫兩次的痛苦。&lt;/p&gt;
 
@@ -1901,7 +2048,7 @@ func NewCTR(block Block, iv []byte) Stream
 
 &lt;p&gt;譯註：本段需要對加密演算法有研究的人重新順一次，PR Plz！&lt;/p&gt;
 
-&lt;h3 id=&#34;介面與方法:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;介面與方法&lt;/h3&gt;
+&lt;h3 id=&#34;介面與方法&#34;&gt;介面與方法&lt;/h3&gt;
 
 &lt;p&gt;既然幾乎所有的東西都可以加上方法，那就表示幾乎所有東西都可以實作介面。一個很明顯的例子就是 &lt;code&gt;http&lt;/code&gt; 套件的 &lt;code&gt;Handler&lt;/code&gt; 介面。任何實做這個介面的東西都可以用來處理 HTTP 請求。&lt;/p&gt;
 
@@ -1996,11 +2143,11 @@ func ArgServer(w http.ResponseWriter, req *http.Request) {
 
 &lt;p&gt;在這節裡，我們用了 struct、整數、channel 和函式來當 HTTP 伺服器。之所以能這樣用，是因為介面只是定義一組方法，而方法幾乎可以定義在任何東西上。&lt;/p&gt;
 
-&lt;h2 id=&#34;空白識別子:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;空白識別子&lt;/h2&gt;
+&lt;h2 id=&#34;空白識別子&#34;&gt;空白識別子&lt;/h2&gt;
 
 &lt;p&gt;我們之前已經在 &lt;em&gt;for range&lt;/em&gt; 迴圈和 &lt;em&gt;map&lt;/em&gt; 的章節提過這個名詞好幾次。你可以指定任意型別的任何值給空白識別子，這個值會被忽略。這有點像是 unix 的 */dev/null*：只能寫入，通常是用在你需要有一個變數，但它的值一點都不重要的時候。之前我們有看過幾次這種用法了。&lt;/p&gt;
 
-&lt;h3 id=&#34;空白識別子與多重指定:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;空白識別子與多重指定&lt;/h3&gt;
+&lt;h3 id=&#34;空白識別子與多重指定&#34;&gt;空白識別子與多重指定&lt;/h3&gt;
 
 &lt;p&gt;&lt;em&gt;for range&lt;/em&gt; 迴圈那節的例子，就是空白識別子在多重指定裡的應用。&lt;/p&gt;
 
@@ -2020,7 +2167,7 @@ if fi.IsDir() {
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;沒有用到的引用和變數:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;沒有用到的引用和變數&lt;/h3&gt;
+&lt;h3 id=&#34;沒有用到的引用和變數&#34;&gt;沒有用到的引用和變數&lt;/h3&gt;
 
 &lt;p&gt;如果定義了一個變數，或是引入了一個套件，卻沒有真的用到它們，那麼就會發生編譯錯誤。引入用不到的套件會讓程式變肥、編譯變慢，而定義用不到的變數至少會浪廢記憶體，也會拖慢效能，甚至可能是某種 bug 的跡象。當程式正在密集開發的時候，這種情況會比較常見。為了要讓編譯成功，你得一直來來回回的加上、刪除相關的引用和定義，實在很擾人。空白識別子提供了一個暫時的解決方案。&lt;/p&gt;
 
@@ -2070,7 +2217,7 @@ func main() {
 
 &lt;p&gt;慣例上，用來避開引用錯誤的這兩行宣告，要放在引用的正下方，也要加上註解。這是為了未來可以回想起程式中有這樣的情況。&lt;/p&gt;
 
-&lt;h3 id=&#34;為了副作用而引用:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;為了副作用而引用&lt;/h3&gt;
+&lt;h3 id=&#34;為了副作用而引用&#34;&gt;為了副作用而引用&lt;/h3&gt;
 
 &lt;p&gt;像上一個例子中 &lt;code&gt;fmt&lt;/code&gt; 和 &lt;code&gt;os&lt;/code&gt; 的引用，要嘛補上使用它們的程式碼，要嘛就該刪除掉，空白識別子只是標識出我們還有相關工作要作。不過有時我們引用套件只是為了它的副作用，套件本身我們不會用到。舉例來說，&lt;code&gt;net/http/pprof&lt;/code&gt; 套件在它的 &lt;code&gt;init&lt;/code&gt; 函式中會註冊一個 HTTP 處理程式，用來提供相關的調校資訊。它有提供 API，不過通常你並不會用到，只會從 web 頁面上存取它。如果只需要一個套件的副作用，你可以用空白識別子作它的別名&lt;/p&gt;
 
@@ -2079,7 +2226,7 @@ func main() {
 
 &lt;p&gt;這樣子你就沒有辦法在程式中使用這個套件中任何的識別子：在目前的源碼檔中，這個套件沒有名字。這表明了我們是為了它的副作用才引用的：如果你給了它名字而又沒有用到它，那就會有編譯錯誤。&lt;/p&gt;
 
-&lt;h3 id=&#34;檢查型別:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;檢查型別&lt;/h3&gt;
+&lt;h3 id=&#34;檢查型別&#34;&gt;檢查型別&lt;/h3&gt;
 
 &lt;p&gt;如同我們在 &lt;em&gt;介面&lt;/em&gt; 章節中提到的，型別不需要定義它實作了些什麼介面，只要實作那個介面定義的所有方法就夠了。實作中，大部份的介面型別轉換都是靜態的，也就是在編譯時完成的。比如你傳一個 &lt;code&gt;*os.File&lt;/code&gt; 型別的變數給需要 &lt;code&gt;io.Reader&lt;/code&gt; 的函式當參數，除非 &lt;code&gt;*os.File&lt;/code&gt; 有實作 &lt;code&gt;io.Reader&lt;/code&gt; 定義的所有方法，否則編譯的時候就會出錯了。&lt;/p&gt;
 
@@ -2104,7 +2251,7 @@ func main() {
 
 &lt;p&gt;這種寫法指明了我們只是想做型別檢查，而不是要定義一個新的變數。不過也不要看到黑影就開槍，真的不需要把每個型別都加上這種檢查。慣例上我們只在編譯器沒辦法為我們檢查的時候才會用這招，不過這也是很少見的事。&lt;/p&gt;
 
-&lt;h2 id=&#34;嵌入:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;嵌入&lt;/h2&gt;
+&lt;h2 id=&#34;嵌入&#34;&gt;嵌入&lt;/h2&gt;
 
 &lt;p&gt;Go 沒有提供常見的、基於型別的繼承，不過確實可以像繼承那樣，借用先人的智慧來完成工作：把某個型別嵌入到 struct 或介面中。&lt;/p&gt;
 
@@ -2195,9 +2342,9 @@ type ReadWriter struct {
 
 &lt;p&gt;其次，如果在同一層出現命名衝突，通常這會是個錯誤。如果 &lt;code&gt;Job&lt;/code&gt; 型別裡已經有 &lt;code&gt;Logger&lt;/code&gt; 屬性的情況下嵌了 &lt;code&gt;log.Logger&lt;/code&gt; 進去，這八成是哪裡出了問題。然而，如果這衝突的命名只出現在定義的時候，外部程式不會存取到的話就沒問題。這是為了保護內層的型別不會被外部修改：顯然不會被外部使用的那些資料就不需要這種保護。&lt;/p&gt;
 
-&lt;h2 id=&#34;並行運算:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;並行運算&lt;/h2&gt;
+&lt;h2 id=&#34;並行運算&#34;&gt;並行運算&lt;/h2&gt;
 
-&lt;h3 id=&#34;以溝通來共享:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;以溝通來共享&lt;/h3&gt;
+&lt;h3 id=&#34;以溝通來共享&#34;&gt;以溝通來共享&lt;/h3&gt;
 
 &lt;p&gt;並行運算是深奧的問題，這裡只討論一些 Go 語言中相關的重點。&lt;/p&gt;
 
@@ -2210,7 +2357,7 @@ type ReadWriter struct {
 
 &lt;p&gt;要理解為什麼，我們先假設現在有一個程式，跑在一台單核的電腦上。它絕對不會有同步問題，你知道，我知道，獨眼龍也知道。然後我們把這個程式再跑一份起來，顯然也不會有同步問題。現在，讓這兩份程式互相溝通。如果它們是用彼此溝通的那個管道來做同步控制，那它們還是不會有同步問題。Unix 的管道正是這種模式的完美詮釋。雖然 Go 對於並行運算的處理模式是從 Hoare 的 Communicating Sequential Processes (CSP) 發想的，但你也可以把它想成是比較一般化、不會有型別問題的 Unix 管道。&lt;/p&gt;
 
-&lt;h3 id=&#34;goroutine:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;Goroutine&lt;/h3&gt;
+&lt;h3 id=&#34;goroutine&#34;&gt;Goroutine&lt;/h3&gt;
 
 &lt;p&gt;之所以會取這個名字，是因為現有的各種類似名稱：thread、副程序、程序…等等，都不能精準描述它。Goroutine 的模型很簡單：它是一個函式，和其他 goroutine 在同一個位址空間中做並行運算。它很小，只需要比配置堆疊再多一點的資源，而且它的堆疊一開始也會很小，所以它是真的很小。但當需要的時候，它也會靠在 heap 中配置空間來增長。&lt;/p&gt;
 
@@ -2235,7 +2382,7 @@ type ReadWriter struct {
 
 &lt;p&gt;這些範例沒什麼實用價值，因為你不知道它何時才會結束。要做到這點，就得靠 channel 了。&lt;/p&gt;
 
-&lt;h3 id=&#34;channel:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;Channel&lt;/h3&gt;
+&lt;h3 id=&#34;channel&#34;&gt;Channel&lt;/h3&gt;
 
 &lt;p&gt;像 &lt;code&gt;map&lt;/code&gt; 一樣，channel 要用 &lt;code&gt;make&lt;/code&gt; 配置，結果會是一個指標，指向某種內部的資料結構。如果你加上一個整數當參數，它會是 channel 的緩衝區的大小。&lt;/p&gt;
 
@@ -2339,7 +2486,7 @@ func Serve(clientRequests chan *Request, quit chan bool) {
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;傳送-channel-的-channel:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;傳送 channel 的 channel&lt;/h3&gt;
+&lt;h3 id=&#34;傳送-channel-的-channel&#34;&gt;傳送 channel 的 channel&lt;/h3&gt;
 
 &lt;p&gt;Go 語言中一個極重要的特性是：channel 是 first-class value，你可以任意的配置、傳遞它。常見的用法是用來實作安全的平行處理環境。&lt;/p&gt;
 
@@ -2379,7 +2526,7 @@ fmt.Printf(&amp;quot;answer: %d\n&amp;quot;, &amp;lt;-request.resultChan)
 
 &lt;p&gt;雖然這個範例還需要很多修改才能符合現實狀況，但這段程式已經是一個提供流量控管、平行處理的非阻斷式 RPC 系統，而且裡面沒有半個同步鎖。&lt;/p&gt;
 
-&lt;h3 id=&#34;平行處理:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;平行處理&lt;/h3&gt;
+&lt;h3 id=&#34;平行處理&#34;&gt;平行處理&lt;/h3&gt;
 
 &lt;p&gt;另外一種應用是我們可以在多個 CPU 核心間進行平行處理。如果計算可以分成好幾個彼此獨立的部份，那就可以同時進行，只要用一個 channel 來確認哪個部份已經執行完畢就好。&lt;/p&gt;
 
@@ -2425,7 +2572,7 @@ func (v Vector) DoAll(u Vector) {
 
 &lt;p&gt;要注意，別把並行運算 (把程式結構調整成數個可以彼此獨立執行的組件) 和平行運算 (把一個運算分拆成幾個彼此獨立的小型運算，交給不同的 CPU 核心同時進行) 給搞混了。雖然 Go 語言適合並行運算的特性會讓你比較容易把問題用平行運算處理，但 Go 是適合並行運算的語言，不完全適合平行運算，所以某些平行運算的模式不適合用 Go。你可以看看&lt;a href=&#34;http://blog.golang.org/2013/01/concurrency-is-not-parallelism.html&#34;&gt;這個部落格裡的這份演講&lt;/a&gt;來深入了解兩者之間的差異。&lt;/p&gt;
 
-&lt;h3 id=&#34;leaky-buffer:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;Leaky buffer&lt;/h3&gt;
+&lt;h3 id=&#34;leaky-buffer&#34;&gt;Leaky buffer&lt;/h3&gt;
 
 &lt;p&gt;這些適合並行運算的工具還能讓非並行的運算變的更簡單明瞭。以下是個從 RPC 套件中抽象化之後的範例。客戶端不停地行某些來源取得資料，也許是網路。為了避免重複配置、釋放緩衝區，所以我們準備了一個閒置區，它是個 channel，裡面存放閒置的緩衝區。如果 channel 是空的，那我們就配置一個新的緩衝區。把資料放進緩衝區之後，我們就把整個緩衝區丟給伺服器做運算。&lt;/p&gt;
 
@@ -2468,7 +2615,7 @@ func client() {
 
 &lt;p&gt;客戶端從閒置區取得現成的緩衝區，拿不到的話就自己產生一個新的。伺服器把用完的緩衝區放回閒置區，如果閒置區滿了，就直接把這多餘的緩衝區丟棄，垃圾處理機制會負責釋放它。(如果&lt;code&gt;select&lt;/code&gt; 裡所有的 &lt;code&gt;case&lt;/code&gt; 部份都不成立，就會執行 &lt;code&gt;default&lt;/code&gt; 那部份，所以 &lt;code&gt;select&lt;/code&gt; 不會暫停) 這樣的實作只用短短幾行就作了一個 leaky buffer 式的閒置列表，靠的是有緩衝區的 channel 和垃圾處理機制。&lt;/p&gt;
 
-&lt;h2 id=&#34;錯誤處理:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;錯誤處理&lt;/h2&gt;
+&lt;h2 id=&#34;錯誤處理&#34;&gt;錯誤處理&lt;/h2&gt;
 
 &lt;p&gt;程式庫常常會回傳某種錯誤通知給呼叫者。如同前面提到的，多重回傳值讓你可以簡單的同時把正常的回傳值和錯誤狀況同時傳回去，你也應該使用這個方式回傳錯誤碼。舉例來說，&lt;code&gt;os.Open&lt;/code&gt; 發生錯誤的時候不只是回傳 &lt;code&gt;nil&lt;/code&gt;，它還同時會回傳一個錯誤碼。&lt;/p&gt;
 
@@ -2520,7 +2667,7 @@ func (e *PathError) Error() string {
 
 &lt;p&gt;在第二個 &lt;code&gt;if&lt;/code&gt; 這裡我們用了型別斷言。如果型別不對，那 &lt;code&gt;ok&lt;/code&gt; 會是 &lt;code&gt;false&lt;/code&gt;，&lt;code&gt;e&lt;/code&gt; 也會是 &lt;code&gt;nil&lt;/code&gt;。如果型別正確，&lt;code&gt;ok&lt;/code&gt; 會是 &lt;code&gt;true&lt;/code&gt;，所以 錯誤碼和 &lt;code&gt;e&lt;/code&gt; 都會是 &lt;code&gt;*os.PathError&lt;/code&gt; 型別，那麼我們就可以取出並驗證相關資訊了。&lt;/p&gt;
 
-&lt;h3 id=&#34;panic:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;Panic&lt;/h3&gt;
+&lt;h3 id=&#34;panic&#34;&gt;Panic&lt;/h3&gt;
 
 &lt;p&gt;通常我們會透過回傳錯誤值來回報錯誤，像是 &lt;code&gt;Read&lt;/code&gt; 就會回傳它讀取了幾 byte，以及錯誤碼。但如果錯誤是無法回復的呢？有時候程式會發生無論如何都要中斷的錯誤。&lt;/p&gt;
 
@@ -2552,7 +2699,7 @@ func init() {
 }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h3 id=&#34;recover:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;Recover&lt;/h3&gt;
+&lt;h3 id=&#34;recover&#34;&gt;Recover&lt;/h3&gt;
 
 &lt;p&gt;當你呼叫 &lt;code&gt;panic&lt;/code&gt; 的時候，包括執行時期的錯誤 (像是陣列索引超過範圍或是型別斷言失敗) 造成的 &lt;code&gt;panic&lt;/code&gt; 在內，它會循著現在的堆疊一路返回，執行所有 &lt;code&gt;defer&lt;/code&gt; 函式。如果堆疊沒有更多的返回資訊的話，程式就會結束。然而，你還是可以使用內建的 &lt;code&gt;recover&lt;/code&gt; 函式來重新取得控制，甚至是繼續正常的執行。&lt;/p&gt;
 
@@ -2621,7 +2768,7 @@ func Compile(str string) (regexp *Regexp, err error) {
 
 &lt;p&gt;另外，這個慣例會改變真正的錯誤。然而，改變前後的錯誤都會列在錯誤回報中，所以問題的根源還是可以找得到。通常這樣已經很足夠，不論如何程式還是中斷了。但你若想要保留原本的錯誤類型，你可以再多寫幾行程式來過濾並重新發出原本的錯誤。這就當成作業留給讀者自己練習了。&lt;/p&gt;
 
-&lt;h2 id=&#34;一個-web-伺服器:59460734ae8bfafc35f54a1a1aefb011&#34;&gt;一個 web 伺服器&lt;/h2&gt;
+&lt;h2 id=&#34;一個-web-伺服器&#34;&gt;一個 web 伺服器&lt;/h2&gt;
 
 &lt;p&gt;讓我們用一個完整的 Go 程式來當作結束。這個程式其實比較像是在轉發其他的 web 服務。Google 提供了 &lt;a href=&#34;http://chart.apis.google.com&#34;&gt;http://chart.apis.google.com&lt;/a&gt; 這個把資料轉成圖表的服務。這個服務不太方便從瀏覽器中使用，因為你得把資料用 URL 參數傳過去。我們的程式提供了一個比較簡便的作法：提供一個表單，讓你透過表單把文字轉成二維條碼。你可以透過用手機掃描二維條碼來拜訪你輸入的網址。&lt;/p&gt;
 

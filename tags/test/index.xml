@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+      <title>Test on 程式、雜談 </title>
+      <generator uri="https://gohugo.io">Hugo</generator>
+    <link>https://ronmi.github.io/tags/test/</link>
+    <language>zh-tw</language>
+    <author>Ronmi Ren</author>
+    
+    <updated>Thu, 28 Jul 2016 11:33:02 CST</updated>
+    
+    <item>
+      <title>在 karma&#43;webpack 的環境下讓 test coverage 正確顯示 typescript</title>
+      <link>https://ronmi.github.io/post/typescript/test-coverage-with-karma-and-webpack/</link>
+      <pubDate>Thu, 28 Jul 2016 11:33:02 CST</pubDate>
+      <author>Ronmi Ren</author>
+      <guid>https://ronmi.github.io/post/typescript/test-coverage-with-karma-and-webpack/</guid>
+      <description>
+
+&lt;p&gt;可能不是最佳解，但至少 works for me&lt;/p&gt;
+
+&lt;h2 id=&#34;先備知識&#34;&gt;先備知識&lt;/h2&gt;
+
+&lt;p&gt;至少要先做到 &lt;code&gt;karma start&lt;/code&gt; 可以跑測試。&lt;/p&gt;
+
+&lt;h2 id=&#34;概念&#34;&gt;概念&lt;/h2&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;tsc&lt;/code&gt; 會產生 &lt;code&gt;typescript &amp;lt;=&amp;gt; javascript&lt;/code&gt; 對映的 source map&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;karma + webpack + karma-coverage 可以正確處理 js 檔&lt;br /&gt;
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;所以乾脆就用 &lt;code&gt;tsc&lt;/code&gt; 把程式編成 javascript 再測，然後用 &lt;code&gt;remap-istanbul&lt;/code&gt; 把最後的 test coverage 結果用 &lt;code&gt;tsc&lt;/code&gt; 產生的 source map 轉回 tpescript。&lt;/p&gt;
+
+&lt;h2 id=&#34;步驟&#34;&gt;步驟&lt;/h2&gt;
+
+&lt;h3 id=&#34;準備必要的套件&#34;&gt;準備必要的套件&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;npm i -D karma-coverage karma-remap-istanbul istanbul-instrumenter-loader&lt;/code&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;準備-tsc-的設定&#34;&gt;準備 tsc 的設定&lt;/h3&gt;
+
+&lt;p&gt;&lt;code&gt;outDir&lt;/code&gt; 可以使用，但如果你的程式是 js/ts 混合的話要考慮一下，會增加等下設定 karma 和 webpack 的困擾。&lt;/p&gt;
+
+&lt;p&gt;最重要的是 &lt;code&gt;sourceMap&lt;/code&gt; 一定要是 true，沒有 source map 的話 &lt;code&gt;remap-istanbul&lt;/code&gt; 也無用武之地。&lt;/p&gt;
+
+&lt;h3 id=&#34;設定-karma&#34;&gt;設定 karma&lt;/h3&gt;
+
+&lt;p&gt;每個設定的作用可以自己去看 &lt;a href=&#34;https://karma-runner.github.io/1.0/config/configuration-file.html&#34;&gt;karma 文件&lt;/a&gt;，這裡不多說明，只提我有踩到雷的地方。&lt;/p&gt;
+
+&lt;p&gt;假設原始碼放在 &lt;code&gt;./src&lt;/code&gt;，測試碼放在 &lt;code&gt;./test&lt;/code&gt; 且檔名是 &lt;code&gt;xxxxTest.ts&lt;/code&gt; 的話。首先是 &lt;code&gt;files&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;// 在 tsc 設定 outDir: &amp;quot;./build&amp;quot; 的情況
+files: [
+  &#39;./build/test/**/*Test.js&#39;
+],
+
+// 沒有開 outDir
+files: [
+  &#39;./test/**/*Test.js&#39;
+],
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;這邊要你自己參考跑測試時的設定，把 typescript 檔改成 javascript 檔的路徑&lt;/p&gt;
+
+&lt;p&gt;再來設定 &lt;code&gt;preprocessor&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;// 記得照上面的提示修改路徑
+preprocessers: {
+  &#39;./build/src/**/*.js&#39;: [&#39;webpack&#39;, &#39;sourcemap&#39;, &#39;coverage&#39;],
+  &#39;./build/test/**/*.js&#39;: [&#39;webpack&#39;],
+},
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;注意一下 &lt;code&gt;sourcemap&lt;/code&gt; 和 &lt;code&gt;coverage&lt;/code&gt; 都只要加在原始碼的部份就好了&lt;/p&gt;
+
+&lt;p&gt;然後是 &lt;code&gt;webpack&lt;/code&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;webpack: {
+  devtool: &#39;source-map&#39;,
+  resolve: {
+    // 記得不要加 .ts 和 .tsx
+    extensions: [&amp;quot;&amp;quot;, &amp;quot;.webpack.js&amp;quot;, &amp;quot;.web.js&amp;quot;, &amp;quot;.js&amp;quot;, &amp;quot;.json&amp;quot;],
+  },
+  module: {
+    loaders: [
+      // 用 enzyme 必加，詳見 https://github.com/airbnb/enzyme/issues/47
+      { test: /\.json$/, loader: &#39;json&#39; },
+      // 底下加上其他你測試有用到的 loader (用來 load typescript 的就不用加了)
+      {
+        test: /\.css/,
+        loader: &amp;quot;style-loader!css-loader&amp;quot;,
+        exclude: /css\//,
+      },
+    ],
+    preLoaders: [
+      // 原始碼的 js 要用 istanbuul-instrumenter 處理一下，才會有正確的 coverage 資訊出來
+      { test: /\.js$/, loader: &amp;quot;istanbul-instrumenter&amp;quot;, exclude: /(node_modules|test)/ }
+    ]
+  },
+  // 這段也是用 enzyme 才需要的資訊
+  externals: {
+    &#39;react/addons&#39;: true,
+    &#39;react/lib/ExecutionEnvironment&#39;: true,
+    &#39;react/lib/ReactContext&#39;: true,
+  },
+},
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;接著設定 &lt;code&gt;repoters&lt;/code&gt;，要加上 &lt;code&gt;coverage&lt;/code&gt; 和 &lt;code&gt;karma-remap-istanbul&lt;/code&gt; 和它們的設定&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;reporters: [&#39;mocha&#39;, &#39;coverage&#39;, &#39;karma-remap-istanbul&#39;],
+
+coverageReporter: {
+  dir: &#39;./coverage&#39;,
+  reporters: [
+    { type: &#39;json&#39;, subdir: &#39;.&#39; },
+  ],
+},
+remapIstanbulReporter: {
+  src: &#39;./coverage/coverage-final.json&#39;,
+  reports: {
+    html: &#39;./coverage&#39;,
+  },
+},
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;因為 &lt;code&gt;remap-istanbul&lt;/code&gt; 要資料來源是 json 檔，所以要先用 &lt;code&gt;karma-coverage&lt;/code&gt; 產生 json，再用 &lt;code&gt;remapIstanbulReporter.src&lt;/code&gt; 指定正確的檔案位址。&lt;/p&gt;
+
+&lt;p&gt;最後，不要忘了在 &lt;code&gt;plugins&lt;/code&gt; 加上 &lt;code&gt;karma-coverage&lt;/code&gt; 和 &lt;code&gt;karma-remap-istanbul&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;跑看看&#34;&gt;跑看看&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;tsc &amp;amp;&amp;amp; karma start
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;我相信你第一次跑應該是失敗的，第二次跑可能就成功了。&lt;/p&gt;
+
+&lt;p&gt;這是因為 &lt;code&gt;remap-istanbul&lt;/code&gt; 會用 &lt;code&gt;watch&lt;/code&gt; 監聽 json 檔的變化。但這個 watch 很兩光：檔案原本不存在的話就沒辦法監聽了。所以要先用 &lt;code&gt;touch&lt;/code&gt; 確認 json 檔存在&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;mkdir -p ./coverage &amp;amp;&amp;amp; touch ./coverage/coverage-final.json &amp;amp;&amp;amp; tsc &amp;amp;&amp;amp; karma start
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;所以說&#34;&gt;所以說&lt;/h2&gt;
+
+&lt;p&gt;不同的專案肯定會需要一些不同的設定，所以記好這個解法的概念比較重要：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;先用 tsc 編出 js 檔，然後把測試的設定裡的 ts 來源通通換成相應的 js
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;或是&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;有錢就好了
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
