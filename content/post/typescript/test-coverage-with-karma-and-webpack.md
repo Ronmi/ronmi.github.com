@@ -96,7 +96,7 @@ webpack: {
 },
 ```
 
-接著設定 `repoters`，要加上 `coverage` 和 `karma-remap-istanbul` 和它們的設定
+接著設定 `reporters`，要加上 `coverage` 和 `karma-remap-istanbul` 和它們的設定
 
 ```js
 reporters: ['mocha', 'coverage', 'karma-remap-istanbul'],
