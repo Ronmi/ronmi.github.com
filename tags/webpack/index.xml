@@ -108,7 +108,7 @@ preprocessers: {
 },
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;接著設定 &lt;code&gt;repoters&lt;/code&gt;，要加上 &lt;code&gt;coverage&lt;/code&gt; 和 &lt;code&gt;karma-remap-istanbul&lt;/code&gt; 和它們的設定&lt;/p&gt;
+&lt;p&gt;接著設定 &lt;code&gt;reporters&lt;/code&gt;，要加上 &lt;code&gt;coverage&lt;/code&gt; 和 &lt;code&gt;karma-remap-istanbul&lt;/code&gt; 和它們的設定&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-js&#34;&gt;reporters: [&#39;mocha&#39;, &#39;coverage&#39;, &#39;karma-remap-istanbul&#39;],
 
